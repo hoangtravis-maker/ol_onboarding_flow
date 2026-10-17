@@ -43,8 +43,11 @@
       <span class="disc-n">${pct}<small>%</small></span>
     </div>`;
 
-  const dealCard = (p, { tall = true } = {}) => `
-    <div class="deal ${tall ? '' : 'deal-home'}">
+  const TAP_HAND = '<svg class="tap-hand" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M10 3.5a1.5 1.5 0 0 1 3 0V10h.4a1.5 1.5 0 0 1 1.5 1.3 1.5 1.5 0 0 1 2.6.9 1.5 1.5 0 0 1 2.5 1.1V17a5 5 0 0 1-5 5h-2.3a5 5 0 0 1-3.9-1.9l-3.4-4.5a1.5 1.5 0 0 1 2.3-1.9l1.3 1.5Z"/></svg>';
+
+  // hint: ngón tay chỉ vào nút "Mua" (Welcome, khi giỏ còn trống)
+  const dealCard = (p, { tall = true, hint = false } = {}) => `
+    <div class="deal ${tall ? '' : 'deal-home'} ${hint ? 'hint' : ''}">
       <div class="deal-tile" data-action="pdp" data-id="${p.id}">
         <img class="deal-img" src="${p.img}" width="151" height="151" alt="${p.name}">
         ${discountLabel(p.discount)}
@@ -55,6 +58,7 @@
         ${S.cart[p.id] ? qtyStepper(p, 'deal-qty') : `<button class="btn-buy" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
       </div>
       <p class="deal-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
+      ${hint ? TAP_HAND : ''}
     </div>`;
 
   // card.product.normal.sm — "Thường được mua kèm"
@@ -84,7 +88,7 @@
       <div class="body">
         <div class="wl-banner">Bạn đã tích điểm thành công</div>
         <img class="wl-headline ${n ? 'is-a2c' : ''}" src="assets/img/headline.webp" width="245" height="76" alt="Deal online dành riêng cho bạn — Chỉ trong 24h">
-        <div class="deal-grid">${D.dealIds.map((id) => dealCard(byId[id])).join('')}</div>
+        <div class="deal-grid">${D.dealIds.map((id, i) => dealCard(byId[id], { hint: !n && i === 0 })).join('')}</div>
       </div>
       ${n ? `
       <div class="foot wl-foot">
@@ -241,14 +245,14 @@
           <div class="rec-list">${D.recommendIds.map((id) => recCard(byId[id])).join('')}</div>
         </div>
       </div>
-      <div class="foot cart-foot">
+      <div class="foot cart-foot ${n ? 'hint' : ''}">
+        ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
         <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng 0 Voucher</small>${icon('arrow-right-s-line', 16)}</div>
         <div class="btn-group">
           <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
           <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Mua hàng</b><span> · ${n} món</span></button>
         </div>
       </div>
-      ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
     </div>`;
   };
 

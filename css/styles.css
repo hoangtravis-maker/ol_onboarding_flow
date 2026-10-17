@@ -67,7 +67,7 @@ textarea { font: inherit; }
 
 /* ---------- badges ---------- */
 .badge { position: absolute; top: -1px; right: 0; min-width: 16px; height: 16px; padding: 0 5px; border-radius: 20px; background: var(--danger); border: 1px solid #fff; color: #fff; font-size: 12px; line-height: 14px; font-weight: 600; text-align: center; }
-.badge-dk { background: #c53030; height: 13px; min-width: 13px; font-size: 9.85px; line-height: 11px; padding: 0 4px; top: -4px; left: 8px; right: auto; }
+.badge-dk { background: #c53030; height: 14px; min-width: 14px; font-size: 10px; line-height: 12px; padding: 0 4px; top: -5px; left: 14px; right: auto; }
 
 /* ---------- buttons ---------- */
 .btn-l { width: 100%; height: 40px; border-radius: 200px; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 24px 8px 16px; font-size: 16px; line-height: 24px; font-weight: 600; }
@@ -107,6 +107,11 @@ textarea { font: inherit; }
 .dp-now sup { font-size: 8px; line-height: 12px; vertical-align: top; margin-left: 1px; }
 .dp-old { color: var(--secondary); font-size: 10px; line-height: 12px; text-decoration: line-through; }
 .deal-qty { position: absolute; right: 12px; bottom: 12px; }
+/* gợi ý bấm "Mua" ở Welcome */
+.deal.hint .btn-buy::after { content: ''; position: absolute; inset: -4px; border-radius: 200px; border: 2px solid var(--brand); opacity: 0; animation: buy-ring 1.6s ease-out infinite; }
+.tap-hand { position: absolute; right: 27px; top: 155px; z-index: 2; fill: #fff; stroke: var(--primary, #1a202c); stroke-width: 1.4; stroke-linejoin: round; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(23, 25, 35, 0.3)); transform-origin: 50% 0; animation: tap-hand 1.6s ease-in-out infinite; }
+@keyframes buy-ring { 0%, 30% { opacity: 0; transform: scale(0.9); } 40% { opacity: 0.8; } 100% { opacity: 0; transform: scale(1.15); } }
+@keyframes tap-hand { 0%, 100% { transform: translate(5px, 8px); } 30% { transform: translate(0, 0) scale(0.92); } 45% { transform: translate(0, 0); } }
 .deal-name { position: absolute; left: 8px; right: 8px; top: 191px; font-size: 12px; line-height: 16px; font-weight: 600; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* biến thể ở Home: tile 173×181, ảnh lệch 22/15 */
 .deal-home .deal-tile { height: 181px; }
@@ -200,7 +205,8 @@ textarea { font: inherit; }
 .tab.dim { opacity: 0.8; }
 .tab:last-child img { width: 44px; height: 44px; }
 .tab-qr img { width: 52px; height: 52px; border-radius: 50%; }
-.tab-cart { position: relative; display: block; }
+.tab-cart { position: relative; display: block; width: 24px; height: 24px; }
+.tab-cart > svg { display: block; }
 
 .tt-home-cart { right: 14px; bottom: 79px; }
 .tt-home-cart::after { right: 97px; }
@@ -304,8 +310,12 @@ textarea { font: inherit; }
 .bg-btn { flex: 1; min-width: 0; height: 40px; border-radius: 68px; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 16px; white-space: nowrap; }
 .bg-btn b { font-size: 16px; line-height: 24px; font-weight: 600; }
 .bg-btn span { font-size: 14px; line-height: 20px; }
-.tt-cart { right: 8px; bottom: 73px; }
-.tt-cart::after { left: 44px; }
+/* nằm trên footer để không che dòng "Dùng Voucher"; bỏ mũi tên (sẽ chỉ nhầm vào dòng voucher), thay bằng vòng sáng quanh nút Mua hàng */
+.cart-foot { position: relative; }
+.tt-cart { right: 8px; bottom: calc(100% + 8px); }
+.tt-cart::after { display: none; }
+.cart-foot.hint .bg-btn { position: relative; }
+.cart-foot.hint .bg-btn::after { content: ''; position: absolute; inset: -4px; border-radius: 68px; border: 2px solid var(--brand); opacity: 0; animation: buy-ring 1.6s ease-out infinite; }
 
 /* ---------- 5. Checkout ---------- */
 .scr-co .body { background: var(--surface-3); display: flex; flex-direction: column; gap: 4px; }
