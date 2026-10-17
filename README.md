@@ -26,7 +26,7 @@ python3 -m http.server 8000
 | 2 | Home | `#/home` | Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"** trỏ vào tab Deals (chạm để tắt). Bấm Mua: tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào tab Giỏ hàng |
 | 3 | Chi tiết sản phẩm | `#/pdp/<id>` | Bấm Mua: nút đổi thành stepper, tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ ở header |
 | 4 | Giỏ hàng | `#/cart` | Tooltip **"Bấm mua hàng để đặt đơn"** trên nút Mua hàng. Có in-page noti voucher và "Thường được mua kèm" (bấm Mua để thêm vào giỏ) |
-| 5 | Thanh toán | `#/checkout` | Coachmark 4 bước: Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra cách thanh toán → Đặt đơn là xong (Bỏ qua / Tiếp tục / Xem lại / Đã hiểu). Option "Chuyển khoản ngân hàng" có link **Xem hướng dẫn** mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng) |
+| 5 | Thanh toán | `#/checkout` | Coachmark 4 bước: Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra cách thanh toán → Đặt đơn là xong (Bỏ qua / Tiếp tục / Xem lại / Đã hiểu). Bấm ra vùng tối = Tiếp tục; bấm thao tác trong vùng sáng (chọn slot, Dùng voucher, chọn thanh toán, Xem hướng dẫn, Đặt đơn) thì thực hiện luôn và sang bước sau. Voucher: dùng 1 voucher giảm hóa đơn/đơn, tổng tiền cập nhật theo; voucher chưa đủ điều kiện hiện mờ kèm lý do. Option "Chuyển khoản ngân hàng" có link **Xem hướng dẫn** mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng) |
 
 Vào chi tiết sản phẩm bằng cách bấm vào ảnh hoặc tên sản phẩm ở Welcome / Home.
 
@@ -52,7 +52,7 @@ Các phần này bấm vào không có tác dụng, để anh bổ sung sau:
 - **Đặt đơn** ở màn Thanh toán (chưa có màn đặt đơn thành công)
 - Search, menu, thông báo, voucher ở header Home; tab Khuyến mãi, QR, Tài khoản
 - Banner Thịt bò Úc, "Mua ngay" Kiwi, danh mục, các tab deal khác
-- Các nút "Đổi" (siêu thị), "Xem tất cả", "Áp dụng", "Gỡ/Dùng" voucher, "Thêm liên kết thẻ với VNPAY"
+- Các nút "Đổi" (siêu thị), "Xem tất cả", "Áp dụng" mã khuyến mãi, "Thêm liên kết thẻ với VNPAY"
 - "Dùng Voucher", "Xóa (n)", banner "Đơn 100k…", nút "Dùng Ngay" ở giỏ hàng; chia sẻ, chính sách ở PDP
 - Toggle Giao hàng / Nhận tại siêu thị, chọn ngày và slot giờ, chọn phương thức thanh toán, switch dùng điểm: chỉ đổi trạng thái hiển thị
 

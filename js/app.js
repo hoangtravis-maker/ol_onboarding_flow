@@ -28,6 +28,19 @@
   const subtotal = () => cartItems().reduce((s, i) => s + i.p.price * i.q, 0);
   const listTotal = () => cartItems().reduce((s, i) => s + i.p.oldPrice * i.q, 0);
   const orderDiscount = () => D.orderDiscounts.reduce((s, d) => s + d.amount, 0);
+  const vById = Object.fromEntries(D.vouchers.map((v) => [v.id, v]));
+  // lý do voucher chưa dùng được (null = dùng được)
+  const voucherBlock = (v, sum) => {
+    if (v.pickupNA) return 'Không áp dụng cho đơn nhận tại siêu thị';
+    if (sum < v.min) return `Mua thêm ${fmt(v.min - sum)} đ để dùng`;
+    return null;
+  };
+  const voucherAmount = (v, sum) => (v.pct ? Math.min(Math.round(sum * v.pct / 100 / 1000) * 1000, v.max) : v.off);
+  // voucher đang áp dụng; tự gỡ nếu đơn không còn đủ điều kiện
+  const appliedVoucher = (sum) => {
+    const v = vById[S.voucher];
+    return v && !voucherBlock(v, sum) ? v : null;
+  };
 
   // ---------- shared components ----------
   const qtyStepper = (p, cls = '') => `
@@ -247,7 +260,7 @@
       </div>
       <div class="foot cart-foot ${n ? 'hint' : ''}">
         ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
-        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng 0 Voucher</small>${icon('arrow-right-s-line', 16)}</div>
+        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng ${appliedVoucher(sum) ? 1 : 0} Voucher</small>${icon('arrow-right-s-line', 16)}</div>
         <div class="btn-group">
           <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
           <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Mua hàng</b><span> · ${n} món</span></button>
@@ -266,7 +279,9 @@
   screens.checkout = () => {
     const items = cartItems();
     const sum = subtotal();
-    const disc = Math.min(orderDiscount(), sum);
+    const vc = appliedVoucher(sum);
+    const vcAmt = vc ? voucherAmount(vc, sum) : 0;
+    const disc = Math.min(orderDiscount() + vcAmt, sum);
     const total = sum - disc;
     const saving = listTotal() - sum + disc;
     const points = Math.round(total / 1000);
@@ -311,13 +326,17 @@
           <div id="co-s4-top">
             ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="noop">Xem tất cả</a>')}
             <div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div>
-            <div class="vc-list">${D.vouchers.map((v) => `
-              <div class="vc ${v.applied ? 'applied' : ''}">
+            <div class="vc-list">${D.vouchers.map((v) => {
+              const block = voucherBlock(v, sum);
+              const on = vc === v;
+              return `
+              <div class="vc ${on ? 'applied' : ''} ${block ? 'vc-na' : ''}">
                 ${voucherImg(v)}
-                <div class="vc-txt"><p class="vc-mer"><i></i>ONELIFE</p><p class="vc-title">${v.title}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
-                <a class="vc-act" data-action="noop">${v.applied ? 'Gỡ' : 'Dùng'}</a>
+                <div class="vc-txt"><p class="vc-mer"><i></i>ONELIFE</p><p class="vc-title">${v.title}</p><p class="vc-cond ${block ? 'c-danger' : ''}">${block || v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
+                ${block ? '' : `<a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>`}
                 ${v.qty ? `<span class="vc-qty">x${v.qty}</span>` : ''}
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
             </div>
           </div>
           <div class="co-usepts">
@@ -349,6 +368,7 @@
             <div class="sum-row"><span>Khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
             <div class="sum-sub">${D.orderDiscounts.map((d) => `
               <div class="sum-row"><span>${d.club ? '<i class="club"></i>' : ''}${d.label}</span><b class="c-safe">-${fmt(d.amount)} đ</b></div>`).join('')}
+              ${vc ? `<div class="sum-row"><span>Voucher · ${vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div>` : ''}
             </div>
             <hr>
             <div class="sum-row sum-total"><span>Tổng cộng</span><b>${fmt(total)} đ</b></div>
@@ -425,9 +445,14 @@
     const r = unionRect(scr, step.targets);
     const pad = 4;
     const layer = document.createElement('div');
-    layer.className = 'coach';
+    layer.className = 'coach coach-step';
+    const top = r.top + (step.above ? 0 : 6), left = r.left + pad, right = r.right - pad;
+    // 4 tấm chắn trong suốt quanh vùng sáng: bấm ra ngoài = "Tiếp tục"; bấm trong vùng sáng thì thao tác thật (xem click handler)
+    const blk = (st) => `<div class="coach-blk" data-action="coach-out" style="${st}"></div>`;
     layer.innerHTML = `
-      <div class="coach-spot" style="top:${r.top + (step.above ? 0 : 6)}px;left:${r.left + pad}px;width:${r.right - r.left - pad * 2}px;height:${r.bottom - r.top - (step.above ? 0 : 6)}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      ${blk(`top:0;left:0;right:0;height:${top}px`)}${blk(`top:${r.bottom}px;left:0;right:0;bottom:0`)}
+      ${blk(`top:${top}px;left:0;width:${left}px;height:${r.bottom - top}px`)}${blk(`top:${top}px;left:${right}px;right:0;height:${r.bottom - top}px`)}
+      <div class="coach-spot" style="top:${top}px;left:${left}px;width:${right - left}px;height:${r.bottom - top}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
       <div class="coach-tt ${step.above ? 'tip-br' : 'tip-tl'}">
         <p class="ct-title">${step.title}</p>
         <p class="ct-text">${step.text}</p>
@@ -485,13 +510,18 @@
     lastRoute = key;
     const el = app.querySelector('.scr');
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
-    if (name === 'checkout' && !S.coachDone && cartLines()) {
+    if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
       const steps = checkoutSteps();
       showCoach(el, steps[coachStep], coachStep, steps.length);
     }
   }
 
   // ---------- actions ----------
+  // coachmark checkout: thao tác của khách trong lúc xem hướng dẫn được tính như bấm "Tiếp tục"
+  const coachAdvance = () => {
+    if (coachStep + 1 >= checkoutSteps().length) { S.coachDone = true; save(); } else coachStep += 1;
+  };
+
   const actions = {
     go: (d) => { location.hash = d.to; },
     back: () => { if (history.length > 1) history.back(); else location.hash = '#/home'; },
@@ -512,6 +542,8 @@
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
     'coach-next': () => { coachStep += 1; render(true); },
+    'coach-out': () => { coachAdvance(); render(true); },
+    voucher: (d) => { S.voucher = S.voucher === d.id ? null : d.id; save(); render(true); },
     'coach-skip': () => { S.coachDone = true; save(); render(true); },
     'coach-review': () => { coachStep = 0; render(true); },
     'coach-done': () => { S.coachDone = true; save(); render(true); },
@@ -519,6 +551,11 @@
 
   app.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action]');
+    // bấm xuyên qua vùng sáng của coachmark: sang bước sau rồi thực hiện thao tác thật
+    if (app.querySelector('.coach-step') && !e.target.closest('.coach')) {
+      coachAdvance();
+      if (!el || !app.contains(el) || !actions[el.dataset.action] || el.dataset.action === 'noop') { render(true); return; }
+    }
     if (!el || !app.contains(el)) return;
     // nút bên trong thẻ sản phẩm không mở PDP
     e.stopPropagation();

@@ -60,11 +60,13 @@ window.DATA = {
 
   dealTabs: ['⭐️ Deals cho anh Triều', 'Khuyến mãi HOT', 'Rau sạch', 'Giá tốt', 'Mua là tặng'],
 
-  // Checkout > Chọn khuyến mãi
+  // Checkout > Chọn khuyến mãi — dùng 1 voucher giảm hóa đơn mỗi đơn
+  //   off: giảm cố định (đ) · pct + max: giảm % tối đa · min: giá trị đơn tối thiểu
+  //   pickupNA: không áp dụng cho đơn nhận tại siêu thị (VD voucher vận chuyển)
   vouchers: [
-    { kind: 'cash', imgTitle: 'PHIẾU GIẢM GIÁ TIỀN MẶT', title: 'Giảm 20.000 đ phí vận chuyển', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 17/08/2023', applied: true },
-    { kind: 'ship', imgTitle: 'MIỄN PHÍ VẬN CHUYỂN', imgSub: 'Đơn từ 500k', title: 'Giảm 20.000 đ phí vận chuyển', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 17/08/2023', qty: 2 },
-    { kind: 'percent', imgTitle: 'PHIẾU GIẢM GIÁ %', title: 'Giảm 10% tối đa 50.000 đ', cond: 'Cho đơn từ 200.000 đ', expiry: 'Hạn dùng: 17/08/2023', qty: 2 },
+    { id: 'new12', kind: 'percent', imgTitle: 'PHIẾU GIẢM GIÁ %', title: 'Giảm 12% tối đa 50.000 đ', cond: 'Cho đơn từ 100.000 đ', expiry: 'Hạn dùng: 31/10/2026', pct: 12, max: 50000, min: 100000 },
+    { id: 'new20k', kind: 'cash', imgTitle: 'PHIẾU GIẢM GIÁ TIỀN MẶT', title: 'Giảm 20.000 đ', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 31/10/2026', off: 20000, min: 0, qty: 2 },
+    { id: 'ship', kind: 'ship', imgTitle: 'MIỄN PHÍ VẬN CHUYỂN', imgSub: 'Đơn từ 500k', title: 'Giảm 20.000 đ phí vận chuyển', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 31/10/2026', pickupNA: true },
   ],
 
   // Khuyến mãi áp dụng trong "Kiểm tra thông tin hóa đơn"

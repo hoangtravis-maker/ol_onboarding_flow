@@ -393,6 +393,8 @@ textarea { font: inherit; }
 .vc-title { margin-top: 4px; height: 40px; color: var(--warning); font-size: 14px; line-height: 20px; font-weight: 600; }
 .vc-cond { margin-top: 2px; font-size: 12px; line-height: 16px; }
 .vc-exp { font-size: 12px; line-height: 16px; color: var(--tertiary); }
+.vc-na .vc-img, .vc-na .vc-title { opacity: 0.45; }
+.c-danger { color: var(--danger); }
 .vc-act { position: absolute; right: 16px; top: 44px; color: var(--brand); font-size: 14px; line-height: 20px; font-weight: 600; }
 .vc-qty { position: absolute; right: 16px; top: 0; width: 32px; padding: 4px 2px; background: var(--safe); color: #fff; border-radius: 0 0 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; text-align: center; }
 .co-usepts { display: flex; align-items: center; gap: 8px; padding: 12px 8px; border-top: 1px solid var(--divider); font-size: 14px; line-height: 20px; }
@@ -457,6 +459,9 @@ textarea { font: inherit; }
 
 /* ---------- coachmark ---------- */
 .coach { position: absolute; inset: 0; z-index: 30; }
+.coach-step { pointer-events: none; }
+.coach-step .coach-blk, .coach-step .coach-tt { pointer-events: auto; }
+.coach-blk { position: absolute; }
 .coach-spot { position: absolute; border-radius: 8px; pointer-events: none; transition: all 0.2s ease; }
 .coach-tt { position: absolute; left: 8px; right: 8px; background: var(--brand-dark); color: #fff; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 20px; animation: tt-in 0.2s ease-out; }
 .coach-tt::before { content: ''; position: absolute; border: 6px solid transparent; }
