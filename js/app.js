@@ -20,6 +20,7 @@
   // trạng thái tạm thời theo màn (không lưu)
   let tipFor = null;      // 'home' | 'pdp' — tooltip "Đã thêm, bấm giỏ hàng để đặt"
   let coachStep = 0;      // bước coachmark ở checkout
+  let guide = null;       // { tab, step } khi đang mở hướng dẫn chuyển khoản
 
   const cartItems = () => Object.entries(S.cart).filter(([, q]) => q > 0).map(([id, q]) => ({ p: byId[id], q }));
   const cartCount = () => cartItems().reduce((s, i) => s + i.q, 0);
@@ -56,6 +57,16 @@
       <p class="deal-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
     </div>`;
 
+  // card.product.normal.sm — "Thường được mua kèm"
+  const recCard = (p) => `
+    <div class="rcard">
+      <div class="rcard-img" data-action="pdp" data-id="${p.id}"><img src="${p.img}" width="132" height="132" alt="${p.name}"><span class="rcard-disc">-${p.discount}%</span></div>
+      <p class="rcard-price">${fmt(p.price)}<small> đ</small></p>
+      <p class="rcard-old"><s>${fmt(p.oldPrice)} đ</s> <b class="c-safe2">Tiết kiệm ${fmt((p.oldPrice - p.price) / 1000)}k</b></p>
+      <p class="rcard-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
+      ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="rcard-buy" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
+    </div>`;
+
   const tooltip = (text, cls) => `<div class="tt ${cls}">${text}</div>`;
 
   const titleCheckout = (idx, label, right = '') => `
@@ -73,7 +84,7 @@
       <div class="body">
         <div class="wl-banner">Bạn đã tích điểm thành công</div>
         <img class="wl-headline ${n ? 'is-a2c' : ''}" src="assets/img/headline.webp" width="245" height="76" alt="Deal online dành riêng cho bạn — Chỉ trong 24h">
-        <div class="deal-grid">${D.products.map((p) => dealCard(p)).join('')}</div>
+        <div class="deal-grid">${D.dealIds.map((id) => dealCard(byId[id])).join('')}</div>
       </div>
       ${n ? `
       <div class="foot wl-foot">
@@ -98,7 +109,7 @@
       <div class="body">
         <div class="deli">
           <div class="deli-seg"><span>Giao trong 2h</span><span class="on">Đến nhận</span></div>
-          <div class="deli-store" data-action="noop"><span>tại</span><span class="ell">${D.store.home}</span>${icon('arrow-down-s-line', 16)}</div>
+          <div class="deli-store" data-action="noop"><span>tại</span><span class="ell">${D.store.name}, ${D.store.address}</span>${icon('arrow-down-s-line', 16)}</div>
         </div>
         <div class="member">
           <img class="member-bg" src="assets/img/member-bg.webp" width="360" height="133" alt="">
@@ -201,8 +212,7 @@
     <div class="scr scr-cart">
       <div class="appbar bordered"><button class="appbar-l" data-action="back" aria-label="Đóng">${icon('close-line')}</button><h1>Giỏ hàng</h1></div>
       <div class="body">
-        <div class="cart-promo" data-action="noop"><span>Đơn 100K, mua sản phẩm với giá tốt</span>${icon('arrow-right-s-line', 20)}</div>
-        <div class="cart-promo" data-action="noop"><span>Đơn 500K, tặng sản phẩm bơ</span>${icon('arrow-right-s-line', 20)}</div>
+        <div class="cart-promo" data-action="noop"><span>${D.cartPromo}</span>${icon('arrow-right-s-line', 20)}</div>
         <div class="cart-all"><span class="cb on"></span><span class="grow">Chọn tất cả (${n} món)</span><a data-action="noop">Xóa (${n})</a></div>
         <div class="cart-list">
           ${items.length ? items.map(({ p }) => `
@@ -219,16 +229,26 @@
             </div>
           </div>`).join('') : `<div class="cart-empty">Giỏ hàng trống. <a data-action="go" data-to="#/welcome">Xem deal online</a></div>`}
         </div>
-      </div>
-      <div class="foot cart-foot">
-        <div class="cf-row cf-blue" data-action="noop"><b>Gói mua hàng</b>${icon('information-line', 16)}<span class="grow"></span><small>Bạn có 0 phiếu mua hàng</small>${icon('arrow-right-s-line', 16)}</div>
-        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20)}<b class="grow">Dùng Voucher</b><small>Đã áp dụng 0 Voucher</small>${icon('arrow-right-s-line', 16)}</div>
-        <div class="btn-group">
-          <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
-          <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Thanh toán</b><span> · ${n} món</span></button>
+        <div class="cart-noti-wrap">
+          <div class="cart-noti" data-action="noop">
+            <img src="${D.cartNoti.img}" width="45" height="45" alt="">
+            <div class="grow"><b>${D.cartNoti.title}</b><p>${D.cartNoti.text}</p></div>
+            <button class="btn-s" data-action="noop">${D.cartNoti.cta}</button>
+          </div>
+        </div>
+        <div class="rec">
+          <h2>Thường được mua kèm</h2>
+          <div class="rec-list">${D.recommendIds.map((id) => recCard(byId[id])).join('')}</div>
         </div>
       </div>
-      ${n ? tooltip('Bấm thanh toán để đặt đơn', 'tt-down tt-cart') : ''}
+      <div class="foot cart-foot">
+        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng 0 Voucher</small>${icon('arrow-right-s-line', 16)}</div>
+        <div class="btn-group">
+          <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
+          <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Mua hàng</b><span> · ${n} món</span></button>
+        </div>
+      </div>
+      ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
     </div>`;
   };
 
@@ -254,29 +274,30 @@
           ${titleCheckout(1, 'Chọn phương thức giao')}
           <div class="co-deli">
             <button class="${S.deli === 'ship' ? 'on' : ''}" data-action="deli" data-v="ship"><i>${icon('e-bike-line', 16)}</i>Giao hàng</button>
-            <button class="${S.deli === 'pickup' ? 'on' : ''}" data-action="deli" data-v="pickup"><i>${icon('walk-line', 16)}</i>Tự đến nhận</button>
+            <button class="${S.deli === 'pickup' ? 'on' : ''}" data-action="deli" data-v="pickup"><i>${icon('walk-line', 16)}</i>Nhận tại siêu thị</button>
           </div>
         </section>
         <section class="co-sec" id="co-s2">
-          ${titleCheckout(2, 'Chọn địa chỉ giao')}
+          ${titleCheckout(2, 'Chọn nơi nhận')}
           <div class="co-addr">
-            <i class="co-pin">${icon('map-pin-2-line', 16)}</i>
-            <div class="grow"><p>Giao đến <b>${D.user.receiverName}</b></p><p class="c-sec">${D.user.address}</p></div>
+            <i class="co-storeic">${icon('store-2-line', 20)}</i>
+            <p class="grow co-addr-txt">Nhận tại <b>${D.store.name}, ${D.store.address}</b></p>
             <a data-action="noop">Đổi</a>
           </div>
-          <div class="co-store"><div class="grow"><p>Siêu thị phục vụ bạn</p><b>${D.store.pickup}</b></div><a data-action="noop">Đổi</a></div>
-          <div class="co-hint">Thêm hướng dẫn giao hàng cho tài xế</div>
         </section>
         <section class="co-sec" id="co-s3">
-          ${titleCheckout(3, 'Chọn giờ giao nhận')}
+          ${titleCheckout(3, 'Chọn giờ nhận')}
           <div class="co-order">
             <div class="co-slots-wrap" id="co-slots">
-              <span class="chip">${D.pickup.day}</span>
+              <div class="co-days">${D.pickup.days.map((d, i) => `<button class="chip ${(S.day || 0) === i ? 'on' : ''}" data-action="day" data-i="${i}">${d}</button>`).join('')}</div>
               <div class="co-slots">${D.pickup.slots.map((s, i) => `<button class="${S.slot === i ? 'on' : ''}" data-action="slot" data-i="${i}">${s}</button>`).join('')}</div>
             </div>
             <div class="co-items">
               ${items.map(({ p, q }) => `
-              <div class="co-item"><b class="co-q">${q}x</b><img src="${p.img}" width="40" height="40" alt=""><p class="grow">${p.name}</p><div class="ci-price"><b>${fmt(p.price * q)} đ</b><s>${fmt(p.oldPrice * q)} đ</s></div></div>`).join('')}
+              <div class="co-item">
+                <div class="co-item-top"><img src="${p.img}" width="40" height="40" alt=""><p class="grow">${p.name}</p></div>
+                <div class="co-item-btm"><b>${fmt(p.price * q)} đ</b><s>${fmt(p.oldPrice * q)} đ</s><span class="tag-deal">${icon('price-tag-3-fill', 14)}Ưu đãi</span><span class="grow"></span><span class="co-q">x${q}</span></div>
+              </div>`).join('')}
             </div>
             <div class="co-note"><textarea rows="3" placeholder="Nhập ghi chú đơn"></textarea></div>
             <div class="co-points">Dự kiến +${fmt(points)} điểm cho đơn ${icon('information-line', 16)}</div>
@@ -308,13 +329,14 @@
             <div class="pay-row" data-action="pay" data-id="${m.id}">
               <span class="radio ${S.payment === m.id ? 'on' : ''}"></span>
               <img src="${m.img}" width="32" height="32" alt="">
-              <div class="grow"><p>${m.label}</p>${m.sub ? `<small>${m.sub}</small>` : ''}</div>
+              <div class="grow"><p>${m.label}</p>${m.sub ? `<small class="${m.guide ? 'pay-desc' : ''}">${m.sub}${m.guide ? ' <a class="pay-guide" data-action="guide-open">Xem hướng dẫn</a>' : ''}</small>` : ''}</div>
             </div>`).join('')}
             <div class="pay-add">
               <a data-action="noop">${icon('add-line', 20)}Thêm liên kết thẻ với VNPAY</a>
               <p>Chọn để thêm Thẻ ATM hoặc Thẻ quốc tế (VISA, MASTER CARD) với VNPAY. Sau khi thêm thẻ, bạn sẽ được quay về trang thanh toán để tiếp tục đặt đơn</p>
             </div>
           </div>
+          <div class="pay-notes">${D.paymentNotes.map((t) => `<p>${t}</p>`).join('')}</div>
         </section>
         <section class="co-sec" id="co-s6">
           ${titleCheckout(6, 'Kiểm tra thông tin hóa đơn')}
@@ -333,6 +355,32 @@
         <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(saving)} đ</p><p class="bg-price"><b>${fmt(total)} đ</b></p></div>
         <button class="bg-btn" id="co-order-btn" data-action="noop"><b>Đặt đơn</b></button>
       </div>
+      ${guide ? bankGuideSheet() : ''}
+    </div>`;
+  };
+
+  // Bottom sheet "Hướng dẫn Chuyển khoản ngân hàng"
+  const bankGuideSheet = () => {
+    const tab = D.bankGuide[guide.tab];
+    const step = tab.steps[guide.step];
+    const last = tab.steps.length - 1;
+    return `
+    <div class="sheet-ov" data-action="guide-close"></div>
+    <div class="sheet">
+      <div class="sheet-hd"><button class="appbar-l" data-action="guide-close" aria-label="Đóng">${icon('close-line')}</button><h2>Hướng dẫn Chuyển khoản ngân hàng</h2></div>
+      <div class="sheet-body">
+        <div class="gd-tabs">${D.bankGuide.map((t, i) => `<button class="${i === guide.tab ? 'on' : ''}" data-action="guide-tab" data-i="${i}">${t.tab}</button>`).join('')}</div>
+        <div class="gd-card">
+          <img class="gd-img" src="${step.img}" width="183" height="395" alt="Bước ${guide.step + 1}">
+          <div class="gd-title"><small>BƯỚC ${guide.step + 1}</small><p>${step.text}</p></div>
+          <div class="gd-nav">
+            <button class="${guide.step ? '' : 'hide'}" data-action="guide-step" data-d="-1">Quay lại</button>
+            <span class="gd-dots">${tab.steps.map((_, i) => `<i class="${i === guide.step ? 'on' : ''}"></i>`).join('')}</span>
+            <button class="${guide.step < last ? '' : 'hide'}" data-action="guide-step" data-d="1">Tiếp tục</button>
+          </div>
+        </div>
+      </div>
+      <div class="sheet-ft"><button class="btn-l" data-action="guide-close">Đóng</button></div>
     </div>`;
   };
 
@@ -341,7 +389,7 @@
 
   const checkoutSteps = () => [
     { targets: ['#co-s1', '#co-s2', '#co-slots'], title: 'Cách bạn nhận hàng',
-      text: `Đơn này nhận tại siêu thị ${D.store.pickupShort}, lúc ${D.pickup.slots[S.slot].replace(' - ', '-')}. Bấm vào đây để đổi nếu cần`,
+      text: `Đơn này nhận tại siêu thị ${D.store.name}, lúc ${D.pickup.slots[S.slot].replace(' - ', '-')}`,
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
     { targets: ['#co-s4-top'], title: 'Áp dụng khuyến mãi cho đơn',
       text: 'Chọn mã khuyến mãi để giảm giá thêm cho đơn hàng này',
@@ -451,6 +499,11 @@
     del: (d) => { delete S.cart[d.id]; save(); render(true); },
     deli: (d) => { S.deli = d.v; save(); render(true); },
     slot: (d) => { S.slot = Number(d.i); save(); render(true); },
+    day: (d) => { S.day = Number(d.i); save(); render(true); },
+    'guide-open': () => { guide = { tab: 0, step: 0 }; render(true); },
+    'guide-close': () => { guide = null; render(true); },
+    'guide-tab': (d) => { guide = { tab: Number(d.i), step: 0 }; render(true); },
+    'guide-step': (d) => { guide.step += Number(d.d); render(true); },
     pay: (d) => { S.payment = d.id; save(); render(true); },
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
@@ -469,6 +522,6 @@
     if (fn) fn(el.dataset);
   });
 
-  window.addEventListener('hashchange', () => { if (route().name !== 'checkout') coachStep = 0; render(false); });
+  window.addEventListener('hashchange', () => { if (route().name !== 'checkout') coachStep = 0; guide = null; render(false); });
   render(false);
 })();

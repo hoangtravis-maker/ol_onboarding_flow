@@ -25,8 +25,8 @@ python3 -m http.server 8000
 | 1 | Welcome: "Bạn đã tích điểm thành công" + 4 Deal online | `#/welcome` | Bấm **Mua**: nút đổi thành stepper, footer hiện "Đặt deal online, nhận ngay tại siêu thị…" và nút **Tiếp tục đặt hàng · N món** |
 | 2 | Home | `#/home` | Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"** trỏ vào tab Deals (chạm để tắt). Bấm Mua: tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào tab Giỏ hàng |
 | 3 | Chi tiết sản phẩm | `#/pdp/<id>` | Bấm Mua: nút đổi thành stepper, tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ ở header |
-| 4 | Giỏ hàng | `#/cart` | Tooltip **"Bấm thanh toán để đặt đơn"** trên nút Thanh toán |
-| 5 | Thanh toán | `#/checkout` | Coachmark 4 bước: Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra cách thanh toán → Đặt đơn là xong (Bỏ qua / Tiếp tục / Xem lại / Đã hiểu) |
+| 4 | Giỏ hàng | `#/cart` | Tooltip **"Bấm mua hàng để đặt đơn"** trên nút Mua hàng. Có in-page noti voucher và "Thường được mua kèm" (bấm Mua để thêm vào giỏ) |
+| 5 | Thanh toán | `#/checkout` | Coachmark 4 bước: Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra cách thanh toán → Đặt đơn là xong (Bỏ qua / Tiếp tục / Xem lại / Đã hiểu). Option "Chuyển khoản ngân hàng" có link **Xem hướng dẫn** mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng) |
 
 Vào chi tiết sản phẩm bằng cách bấm vào ảnh hoặc tên sản phẩm ở Welcome / Home.
 
@@ -52,15 +52,17 @@ Các phần này bấm vào không có tác dụng, để anh bổ sung sau:
 - **Đặt đơn** ở màn Thanh toán (chưa có màn đặt đơn thành công)
 - Search, menu, thông báo, voucher ở header Home; tab Khuyến mãi, QR, Tài khoản
 - Banner Thịt bò Úc, "Mua ngay" Kiwi, danh mục, các tab deal khác
-- Các nút "Đổi" (địa chỉ, siêu thị), "Xem tất cả", "Áp dụng", "Gỡ/Dùng" voucher, "Thêm liên kết thẻ với VNPAY"
-- "Gói mua hàng", "Dùng Voucher", "Xóa (n)" ở giỏ hàng; chia sẻ, chính sách ở PDP
-- Toggle Giao hàng / Tự đến nhận, chọn slot giờ, chọn phương thức thanh toán, switch dùng điểm: chỉ đổi trạng thái hiển thị
+- Các nút "Đổi" (siêu thị), "Xem tất cả", "Áp dụng", "Gỡ/Dùng" voucher, "Thêm liên kết thẻ với VNPAY"
+- "Dùng Voucher", "Xóa (n)", banner "Đơn 100k…", nút "Dùng Ngay" ở giỏ hàng; chia sẻ, chính sách ở PDP
+- Toggle Giao hàng / Nhận tại siêu thị, chọn ngày và slot giờ, chọn phương thức thanh toán, switch dùng điểm: chỉ đổi trạng thái hiển thị
 
 ## Ghi chú so với design
 
 - Ảnh sản phẩm lấy từ ảnh gốc trong Figma (604px). Các asset khác xuất ở 2x.
 - Màn PDP trong design là template (sữa DeliFres + Yakult). Prototype dùng layout đó nhưng hiển thị ảnh, giá, tên của đúng deal được bấm.
-- Giỏ hàng và Thanh toán hiển thị đúng các món user đã thêm. Các block mẫu trong design như "5 món tạm thời hết hàng", Mua chung, sản phẩm gợi ý… được lược bỏ vì không áp dụng cho user mới.
+- Giỏ hàng và Thanh toán hiển thị đúng các món user đã thêm. Các block mẫu trong design như "5 món tạm thời hết hàng", Mua chung… được lược bỏ vì không áp dụng cho user mới.
+- Siêu thị nhận hàng dùng chung một nguồn (`store` trong `js/data.js`) cho Home, Thanh toán và coachmark.
+- Sản phẩm "Thường được mua kèm" (tên, giá) là data mẫu, ảnh lấy từ ảnh chụp app.
 - Tổng tiền, tiết kiệm và điểm dự kiến được tính từ giỏ hàng thật, trừ khuyến mãi mẫu "OneLife Club · Phiếu giảm giá 25k".
 - Không vẽ status bar giả (9:41…), vì prototype chạy trên trình duyệt điện thoại thật.
 
