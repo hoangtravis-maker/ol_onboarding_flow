@@ -1,0 +1,474 @@
+(function () {
+  'use strict';
+
+  const D = window.DATA;
+  const app = document.getElementById('app');
+  const byId = Object.fromEntries(D.products.map((p) => [p.id, p]));
+
+  // ---------- helpers ----------
+  const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const icon = (name, size = 24, cls = '') =>
+    `<svg class="ic ${cls}" width="${size}" height="${size}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+
+  // ---------- state (giữ trong sessionStorage để F5 không mất giỏ) ----------
+  const KEY = 'ol-proto-v1';
+  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: 'olcard', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false });
+  let S;
+  try { S = JSON.parse(sessionStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); }
+  const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  // trạng thái tạm thời theo màn (không lưu)
+  let tipFor = null;      // 'home' | 'pdp' — tooltip "Đã thêm, bấm giỏ hàng để đặt"
+  let coachStep = 0;      // bước coachmark ở checkout
+
+  const cartItems = () => Object.entries(S.cart).filter(([, q]) => q > 0).map(([id, q]) => ({ p: byId[id], q }));
+  const cartCount = () => cartItems().reduce((s, i) => s + i.q, 0);
+  const cartLines = () => cartItems().length;
+  const subtotal = () => cartItems().reduce((s, i) => s + i.p.price * i.q, 0);
+  const listTotal = () => cartItems().reduce((s, i) => s + i.p.oldPrice * i.q, 0);
+  const orderDiscount = () => D.orderDiscounts.reduce((s, d) => s + d.amount, 0);
+
+  // ---------- shared components ----------
+  const qtyStepper = (p, cls = '') => `
+    <div class="qty ${cls}">
+      <button class="qty-btn qty-dec" data-action="dec" data-id="${p.id}" aria-label="Giảm">${icon('subtract-line')}</button>
+      <div class="qty-val">${S.cart[p.id]}</div>
+      <button class="qty-btn qty-inc" data-action="inc" data-id="${p.id}" aria-label="Tăng">${icon('add-line')}</button>
+    </div>`;
+
+  const discountLabel = (pct) => `
+    <div class="disc"><div class="disc-shape"></div>
+      <span class="disc-t">Giảm</span><span class="disc-line"></span>
+      <span class="disc-n">${pct}<small>%</small></span>
+    </div>`;
+
+  const dealCard = (p, { tall = true } = {}) => `
+    <div class="deal ${tall ? '' : 'deal-home'}">
+      <div class="deal-tile" data-action="pdp" data-id="${p.id}">
+        <img class="deal-img" src="${p.img}" width="151" height="151" alt="${p.name}">
+        ${discountLabel(p.discount)}
+        <div class="deal-price">
+          <div class="dp-now">${fmt(p.price)}<sup>đ</sup></div>
+          <div class="dp-old">${fmt(p.oldPrice)} đ</div>
+        </div>
+        ${S.cart[p.id] ? qtyStepper(p, 'deal-qty') : `<button class="btn-buy" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
+      </div>
+      <p class="deal-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
+    </div>`;
+
+  const tooltip = (text, cls) => `<div class="tt ${cls}">${text}</div>`;
+
+  const titleCheckout = (idx, label, right = '') => `
+    <div class="co-title"><span class="co-idx">${idx}</span><span class="co-label">${label}</span>${right}</div>`;
+
+  // ---------- screens ----------
+  const screens = {};
+
+  // 1. Welcome screen — sau khi tích điểm ở POS
+  screens.welcome = () => {
+    const n = cartCount();
+    return `
+    <div class="scr scr-welcome">
+      <div class="appbar"><button class="appbar-l" data-action="go" data-to="#/home" aria-label="Đóng">${icon('close-line')}</button></div>
+      <div class="body">
+        <div class="wl-banner">Bạn đã tích điểm thành công</div>
+        <img class="wl-headline ${n ? 'is-a2c' : ''}" src="assets/img/headline.webp" width="245" height="76" alt="Deal online dành riêng cho bạn — Chỉ trong 24h">
+        <div class="deal-grid">${D.products.map((p) => dealCard(p)).join('')}</div>
+      </div>
+      ${n ? `
+      <div class="foot wl-foot">
+        <div class="wl-note">${icon('walk-line', 20, 'c-brand')}<p><b>Đặt deal online, nhận ngay tại siêu thị</b>, <b class="c-safe">không tốn phí giao hàng</b></p></div>
+        <button class="btn-l" data-action="go" data-to="#/cart">${icon('shopping-cart-2-line')}Tiếp tục đặt hàng · ${n} món</button>
+      </div>` : ''}
+    </div>`;
+  };
+
+  // 2. Home
+  screens.home = () => {
+    const n = cartCount();
+    const u = D.user;
+    return `
+    <div class="scr scr-home">
+      <div class="home-hd">
+        <button class="hd-circle" data-action="noop" aria-label="Menu">${icon('menu-line', 20)}</button>
+        <div class="hd-search" data-action="noop"><span>Meatcool giảm giá 30%</span>${icon('search-line', 20, 'c-brand')}</div>
+        <button class="hd-btn" data-action="noop" aria-label="Voucher"><img src="assets/img/hdr-coupon.webp" width="19" height="19" alt=""><span class="badge">${u.voucherCount}</span></button>
+        <button class="hd-glass" data-action="noop" aria-label="Thông báo">${icon('notification-3-line', 20)}<i class="dot"></i></button>
+      </div>
+      <div class="body">
+        <div class="deli">
+          <div class="deli-seg"><span>Giao trong 2h</span><span class="on">Đến nhận</span></div>
+          <div class="deli-store" data-action="noop"><span>tại</span><span class="ell">${D.store.home}</span>${icon('arrow-down-s-line', 16)}</div>
+        </div>
+        <div class="member">
+          <img class="member-bg" src="assets/img/member-bg.webp" width="360" height="133" alt="">
+          <div class="member-ov"></div>
+          <div class="member-in">
+            <div class="member-name" data-action="noop"><b>${u.fullName}</b><span>Member · Thành viên từ ${u.memberSince}</span>${icon('arrow-right-s-line', 16)}</div>
+            <div class="member-row">
+              <div class="m-points">
+                <div class="m-pt-top"><span>Điểm</span><b>${u.points}</b><small>${u.pointsValue}</small></div>
+                <button class="m-pt-btn" data-action="noop">Sử dụng điểm ${icon('arrow-right-s-line', 12)}</button>
+              </div>
+              <div class="m-right">
+                <div class="m-util" data-action="noop"><div><span>Thẻ OneLife</span><a>Tặng đến 90k ${icon('arrow-right-s-line', 12)}</a></div><b>${u.olCardBalance}</b></div>
+                <div class="m-util" data-action="noop"><div><span>Phiếu giảm giá</span><a>Giảm 50k cho đơn từ 500k ... ${icon('arrow-right-s-line', 12)}</a></div><i class="m-count">${u.voucherCount}</i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="promo-strip">
+          <div class="promo-in">
+            <img src="assets/img/kiwi.webp" width="48" height="48" alt="">
+            <div class="promo-txt"><b>Chỉ còn 2h mua Kiwi giá 88k</b><p>Hộp Kiwi vàng chín Zespri chỉ 88k /4 hộp. Rủ bạn mua chung 4 hộp ngay!</p></div>
+            <button class="btn-s" data-action="noop">Mua ngay</button>
+          </div>
+        </div>
+        <div class="cates">${D.categories.map((c) => `
+          <div class="cate ${c.active ? 'on' : ''} ${c.partial ? 'partial' : ''}" data-action="noop"><img src="${c.img}" width="${c.partial ? 39 : 48}" height="48" alt=""><span>${c.label}</span></div>`).join('')}
+        </div>
+        <div class="deal-tabs" id="deal-tabs">${D.dealTabs.map((t, i) => `<div class="dtab dtab-${i}" data-action="noop"><span>${t}</span></div>`).join('')}</div>
+        <div class="deal-grid deal-grid-home">
+          <div class="deal deal-home"><img class="beef" src="assets/img/beef-banner.webp" width="174" height="223" alt="Thịt bò mát nhập khẩu chuẩn Úc" data-action="noop"></div>
+          ${D.homeDeals.map((id) => dealCard(byId[id], { tall: false })).join('')}
+        </div>
+      </div>
+      <div class="tabbar-wrap">
+        <nav class="tabbar">
+          <a class="tab on" data-action="noop"><img src="assets/img/tab-home.webp" width="24" height="24" alt=""><span>Trang chủ</span></a>
+          <a class="tab" data-action="noop">${icon('price-tag-3-line', 24)}<span>Khuyến mãi</span></a>
+          <a class="tab-qr" data-action="noop"><img src="assets/img/tab-qr.webp" width="52" height="52" alt="Quét mã"></a>
+          <a class="tab dim" data-action="go" data-to="#/cart"><i class="tab-cart">${icon('shopping-cart-2-line', 24)}${n ? `<span class="badge badge-dk">${n}</span>` : ''}</i><span>Giỏ hàng</span></a>
+          <a class="tab dim" data-action="noop"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
+        </nav>
+      </div>
+      ${tipFor === 'home' && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart') : ''}
+    </div>`;
+  };
+
+  // 3. Product detail
+  screens.pdp = (id) => {
+    const p = byId[id] || D.products[0];
+    const n = cartCount();
+    const saved = p.oldPrice - p.price;
+    const soldPct = Math.round((p.sold / p.stock) * 100);
+    return `
+    <div class="scr scr-pdp">
+      <div class="pdp-hd">
+        <button class="appbar-icon" data-action="back" aria-label="Quay lại">${icon('arrow-left-s-line')}</button>
+        <div class="pdp-search" data-action="noop">${icon('search-line', 20, 'c-sec')}<span>Tìm kiếm</span></div>
+        <button class="pdp-cart" data-action="go" data-to="#/cart" aria-label="Giỏ hàng">${icon('shopping-cart-2-line', 20)}${n ? `<span class="badge">${n}</span>` : ''}</button>
+      </div>
+      <div class="body">
+        <div class="pdp-img">
+          <img src="${p.img}" width="151" height="151" alt="${p.name}">
+          <div class="pdp-gift">${icon('gift-2-fill', 20)}Quà tặng</div>
+          <div class="pdp-badges"><span class="b-blue">Ưu đãi online</span></div>
+          <div class="pdp-ind">1/1</div>
+        </div>
+        <div class="pdp-sec">
+          <div class="pdp-key">
+            <div class="pdp-price">
+              <p class="pp-now">${fmt(p.price)} <small>đ</small></p>
+              <p class="pp-sub"><s>${fmt(p.oldPrice)} đ</s> <b class="c-safe">Tiết kiệm ${fmt(saved / 1000)}k</b></p>
+              <p class="pp-name">${p.name}</p>
+            </div>
+            <button class="pdp-link" data-action="noop" aria-label="Chia sẻ">${icon('link-m', 16)}</button>
+          </div>
+          <div class="pdp-b2b" data-action="noop">${icon('stack-line', 20, 'c-brand')}<u>Mua số lượng sỉ, bạn vui lòng liên hệ để được giá tốt</u>${icon('arrow-right-s-line', 12, 'c-brand')}</div>
+          <p class="pdp-left">Chỉ còn ${p.stockLeft} sản phẩm</p>
+          <p class="pdp-end">Kết thúc <b>23:59 · hôm nay</b>, nhận tại siêu thị <u>Xem điều khoản</u></p>
+          <div class="pbar"><i style="width:${soldPct}%"></i><span>Đã bán ${fmt(p.sold)}/${fmt(p.stock)}</span></div>
+          <div class="pdp-pol">
+            <div data-action="noop">${icon('e-bike-line', 20)}<span>Ưu đãi phí giao hàng thành viên</span>${icon('arrow-right-s-line', 20)}</div>
+            <div data-action="noop">${icon('arrow-left-right-line', 20)}<span>Đổi trả trong 24h</span>${icon('arrow-right-s-line', 20)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="foot pdp-foot">
+        ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="btn-l" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
+      </div>
+      ${tipFor === 'pdp' && S.cart[p.id] ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-up tt-pdp-cart') : ''}
+    </div>`;
+  };
+
+  // 4. Cart
+  screens.cart = () => {
+    const items = cartItems();
+    const n = cartLines();
+    const sum = subtotal();
+    return `
+    <div class="scr scr-cart">
+      <div class="appbar bordered"><button class="appbar-l" data-action="back" aria-label="Đóng">${icon('close-line')}</button><h1>Giỏ hàng</h1></div>
+      <div class="body">
+        <div class="cart-promo" data-action="noop"><span>Đơn 100K, mua sản phẩm với giá tốt</span>${icon('arrow-right-s-line', 20)}</div>
+        <div class="cart-promo" data-action="noop"><span>Đơn 500K, tặng sản phẩm bơ</span>${icon('arrow-right-s-line', 20)}</div>
+        <div class="cart-all"><span class="cb on"></span><span class="grow">Chọn tất cả (${n} món)</span><a data-action="noop">Xóa (${n})</a></div>
+        <div class="cart-list">
+          ${items.length ? items.map(({ p }) => `
+          <div class="ci">
+            <div class="ci-top">
+              <span class="cb on"></span>
+              <img src="${p.img}" width="40" height="40" alt="" data-action="pdp" data-id="${p.id}">
+              <p class="ci-name">${p.name}</p>
+              <div class="ci-price"><b>${fmt(p.price)}<small> đ</small></b><s>${fmt(p.oldPrice)}<small> đ</small></s></div>
+            </div>
+            <div class="ci-btm">
+              <button class="ci-del" data-action="del" data-id="${p.id}" aria-label="Xóa">${icon('delete-bin-6-line', 20)}</button>
+              ${qtyStepper(p)}
+            </div>
+          </div>`).join('') : `<div class="cart-empty">Giỏ hàng trống. <a data-action="go" data-to="#/welcome">Xem deal online</a></div>`}
+        </div>
+      </div>
+      <div class="foot cart-foot">
+        <div class="cf-row cf-blue" data-action="noop"><b>Gói mua hàng</b>${icon('information-line', 16)}<span class="grow"></span><small>Bạn có 0 phiếu mua hàng</small>${icon('arrow-right-s-line', 16)}</div>
+        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20)}<b class="grow">Dùng Voucher</b><small>Đã áp dụng 0 Voucher</small>${icon('arrow-right-s-line', 16)}</div>
+        <div class="btn-group">
+          <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
+          <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Thanh toán</b><span> · ${n} món</span></button>
+        </div>
+      </div>
+      ${n ? tooltip('Bấm thanh toán để đặt đơn', 'tt-down tt-cart') : ''}
+    </div>`;
+  };
+
+  // 5. Checkout
+  const voucherImg = (v) => {
+    if (v.kind === 'ship') return `<div class="vc-img vc-ship"><b>${v.imgTitle}</b><em>${v.imgSub}</em><i class="vc-tag">MEMBER</i><span class="vc-circle">${icon('takeaway-fill', 24)}</span></div>`;
+    if (v.kind === 'percent') return `<div class="vc-img vc-pct"><b>${v.imgTitle}</b><span class="vc-circle">${icon('coin-fill', 24)}</span></div>`;
+    return `<div class="vc-img vc-cash"><b>${v.imgTitle}</b><span class="vc-circle">${icon('coin-fill', 24)}</span></div>`;
+  };
+
+  screens.checkout = () => {
+    const items = cartItems();
+    const sum = subtotal();
+    const disc = Math.min(orderDiscount(), sum);
+    const total = sum - disc;
+    const saving = listTotal() - sum + disc;
+    const points = Math.round(total / 1000);
+    return `
+    <div class="scr scr-co">
+      <div class="appbar bordered"><button class="appbar-l" data-action="back" aria-label="Quay lại">${icon('arrow-left-s-line')}</button><h1>Thanh toán</h1></div>
+      <div class="body">
+        <section class="co-sec" id="co-s1">
+          ${titleCheckout(1, 'Chọn phương thức giao')}
+          <div class="co-deli">
+            <button class="${S.deli === 'ship' ? 'on' : ''}" data-action="deli" data-v="ship"><i>${icon('e-bike-line', 16)}</i>Giao hàng</button>
+            <button class="${S.deli === 'pickup' ? 'on' : ''}" data-action="deli" data-v="pickup"><i>${icon('walk-line', 16)}</i>Tự đến nhận</button>
+          </div>
+        </section>
+        <section class="co-sec" id="co-s2">
+          ${titleCheckout(2, 'Chọn địa chỉ giao')}
+          <div class="co-addr">
+            <i class="co-pin">${icon('map-pin-2-line', 16)}</i>
+            <div class="grow"><p>Giao đến <b>${D.user.receiverName}</b></p><p class="c-sec">${D.user.address}</p></div>
+            <a data-action="noop">Đổi</a>
+          </div>
+          <div class="co-store"><div class="grow"><p>Siêu thị phục vụ bạn</p><b>${D.store.pickup}</b></div><a data-action="noop">Đổi</a></div>
+          <div class="co-hint">Thêm hướng dẫn giao hàng cho tài xế</div>
+        </section>
+        <section class="co-sec" id="co-s3">
+          ${titleCheckout(3, 'Chọn giờ giao nhận')}
+          <div class="co-order">
+            <div class="co-slots-wrap" id="co-slots">
+              <span class="chip">${D.pickup.day}</span>
+              <div class="co-slots">${D.pickup.slots.map((s, i) => `<button class="${S.slot === i ? 'on' : ''}" data-action="slot" data-i="${i}">${s}</button>`).join('')}</div>
+            </div>
+            <div class="co-items">
+              ${items.map(({ p, q }) => `
+              <div class="co-item"><b class="co-q">${q}x</b><img src="${p.img}" width="40" height="40" alt=""><p class="grow">${p.name}</p><div class="ci-price"><b>${fmt(p.price * q)} đ</b><s>${fmt(p.oldPrice * q)} đ</s></div></div>`).join('')}
+            </div>
+            <div class="co-note"><textarea rows="3" placeholder="Nhập ghi chú đơn"></textarea></div>
+            <div class="co-points">Dự kiến +${fmt(points)} điểm cho đơn ${icon('information-line', 16)}</div>
+          </div>
+        </section>
+        <section class="co-sec co-sec-promo" id="co-s4">
+          <div id="co-s4-top">
+            ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="noop">Xem tất cả</a>')}
+            <div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div>
+            <div class="vc-list">${D.vouchers.map((v) => `
+              <div class="vc ${v.applied ? 'applied' : ''}">
+                ${voucherImg(v)}
+                <div class="vc-txt"><p class="vc-mer"><i></i>ONELIFE</p><p class="vc-title">${v.title}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
+                <a class="vc-act" data-action="noop">${v.applied ? 'Gỡ' : 'Dùng'}</a>
+                ${v.qty ? `<span class="vc-qty">x${v.qty}</span>` : ''}
+              </div>`).join('')}
+            </div>
+          </div>
+          <div class="co-usepts">
+            <i class="co-pts-ic">${icon('coin-fill', 16)}</i>
+            <p class="grow">Dùng 2.000 điểm <small class="c-safe2">(~Giảm 10.000 đ)</small></p>
+            <button class="switch ${S.usePoints ? 'on' : ''}" data-action="points" aria-label="Dùng điểm"><i></i></button>
+          </div>
+        </section>
+        <section class="co-sec" id="co-s5">
+          ${titleCheckout(5, 'Chọn phương thức thanh toán')}
+          <div class="pay-list">
+            ${D.payments.map((m) => `
+            <div class="pay-row" data-action="pay" data-id="${m.id}">
+              <span class="radio ${S.payment === m.id ? 'on' : ''}"></span>
+              <img src="${m.img}" width="32" height="32" alt="">
+              <div class="grow"><p>${m.label}</p>${m.sub ? `<small>${m.sub}</small>` : ''}</div>
+            </div>`).join('')}
+            <div class="pay-add">
+              <a data-action="noop">${icon('add-line', 20)}Thêm liên kết thẻ với VNPAY</a>
+              <p>Chọn để thêm Thẻ ATM hoặc Thẻ quốc tế (VISA, MASTER CARD) với VNPAY. Sau khi thêm thẻ, bạn sẽ được quay về trang thanh toán để tiếp tục đặt đơn</p>
+            </div>
+          </div>
+        </section>
+        <section class="co-sec" id="co-s6">
+          ${titleCheckout(6, 'Kiểm tra thông tin hóa đơn')}
+          <div class="sum">
+            <div class="sum-row"><span>Tạm tính</span><b>${fmt(sum)} đ</b></div>
+            <div class="sum-row"><span>Khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
+            <div class="sum-sub">${D.orderDiscounts.map((d) => `
+              <div class="sum-row"><span>${d.club ? '<i class="club"></i>' : ''}${d.label}</span><b class="c-safe">-${fmt(d.amount)} đ</b></div>`).join('')}
+            </div>
+            <hr>
+            <div class="sum-row sum-total"><span>Tổng cộng</span><b>${fmt(total)} đ</b></div>
+          </div>
+        </section>
+      </div>
+      <div class="foot btn-group co-foot">
+        <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(saving)} đ</p><p class="bg-price"><b>${fmt(total)} đ</b></p></div>
+        <button class="bg-btn" id="co-order-btn" data-action="noop"><b>Đặt đơn</b></button>
+      </div>
+    </div>`;
+  };
+
+  // ---------- coachmarks ----------
+  const COACH_DIM = 'rgba(45, 55, 72, 0.6)';
+
+  const checkoutSteps = () => [
+    { targets: ['#co-s1', '#co-s2', '#co-slots'], title: 'Cách bạn nhận hàng',
+      text: `Đơn này nhận tại siêu thị ${D.store.pickupShort}, lúc ${D.pickup.slots[S.slot].replace(' - ', '-')}. Bấm vào đây để đổi nếu cần`,
+      buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
+    { targets: ['#co-s4-top'], title: 'Áp dụng khuyến mãi cho đơn',
+      text: 'Chọn mã khuyến mãi để giảm giá thêm cho đơn hàng này',
+      buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
+    { targets: ['#co-s5'], title: 'Kiểm tra cách thanh toán',
+      text: 'Chọn cách bạn muốn trả tiền cho đơn này',
+      buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
+    { targets: ['#co-order-btn'], title: 'Đặt đơn là xong', above: true, noScroll: true,
+      text: 'Ghé siêu thị để lấy đơn hàng đã chọn',
+      buttons: [['Xem lại', 'coach-review'], ['Đã hiểu', 'coach-done']] },
+  ];
+
+  function unionRect(scr, sels) {
+    const base = scr.getBoundingClientRect();
+    const rs = sels.map((s) => scr.querySelector(s)).filter(Boolean).map((el) => el.getBoundingClientRect());
+    if (!rs.length) return null;
+    const top = Math.min(...rs.map((r) => r.top)), bottom = Math.max(...rs.map((r) => r.bottom));
+    const left = Math.min(...rs.map((r) => r.left)), right = Math.max(...rs.map((r) => r.right));
+    return { top: top - base.top, bottom: bottom - base.top, left: left - base.left, right: right - base.left, scrH: base.height, scrW: base.width };
+  }
+
+  function showCoach(scr, step, idx, total) {
+    const body = scr.querySelector('.body');
+    if (!step.noScroll) {
+      const first = scr.querySelector(step.targets[0]);
+      body.scrollTop += first.getBoundingClientRect().top - body.getBoundingClientRect().top - 6;
+    }
+    body.style.overflow = 'hidden';
+    const r = unionRect(scr, step.targets);
+    const pad = 4;
+    const layer = document.createElement('div');
+    layer.className = 'coach';
+    layer.innerHTML = `
+      <div class="coach-spot" style="top:${r.top + (step.above ? 0 : 6)}px;left:${r.left + pad}px;width:${r.right - r.left - pad * 2}px;height:${r.bottom - r.top - (step.above ? 0 : 6)}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      <div class="coach-tt ${step.above ? 'tip-br' : 'tip-tl'}">
+        <p class="ct-title">${step.title}</p>
+        <p class="ct-text">${step.text}</p>
+        <div class="ct-foot">
+          <span class="ct-dots">${Array.from({ length: total }, (_, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('')}</span>
+          <span class="grow"></span>
+          ${step.buttons.map(([label, act], i) => `<button class="${i ? 'ct-primary' : 'ct-ghost'}" data-action="${act}">${label}</button>`).join('')}
+        </div>
+      </div>`;
+    scr.appendChild(layer);
+    const tt = layer.querySelector('.coach-tt');
+    const foot = scr.querySelector('.foot');
+    const maxBottom = r.scrH - (foot && !step.above ? foot.offsetHeight : 0) - 8;
+    if (step.above) {
+      tt.style.top = `${r.top - 8 - tt.offsetHeight}px`;
+    } else {
+      tt.style.top = `${Math.min(r.bottom + 8, maxBottom - tt.offsetHeight)}px`;
+    }
+  }
+
+  function showHomeTip(scr) {
+    const body = scr.querySelector('.body');
+    body.style.overflow = 'hidden';
+    const r = unionRect(scr, ['#deal-tabs']);
+    const layer = document.createElement('div');
+    layer.className = 'coach';
+    layer.dataset.action = 'home-tip-dismiss';
+    layer.innerHTML = `
+      <div class="coach-spot" style="top:${r.top + 4}px;left:${r.left + 4}px;width:${r.right - r.left - 8}px;height:${r.bottom - r.top - 8}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      <div class="coach-tt tip-bl"><p class="ct-title">Deal của bạn ở đây</p><p class="ct-text">Đặt xong nhận ngay tại siêu thị, không tốn phí giao</p></div>`;
+    scr.appendChild(layer);
+    const tt = layer.querySelector('.coach-tt');
+    tt.style.top = `${r.top - 4 - tt.offsetHeight}px`;
+  }
+
+  // ---------- router ----------
+  function route() {
+    const h = location.hash.replace(/^#\/?/, '') || 'welcome';
+    const [name, arg] = h.split('/');
+    return { name, arg };
+  }
+
+  let lastRoute = '';
+  function render(keepScroll) {
+    const { name, arg } = route();
+    if (name === 'reset') { S = fresh(); save(); location.replace('#/welcome'); return; }
+    const key = `${name}/${arg || ''}`;
+    if (key !== lastRoute) { tipFor = tipFor && keepScroll ? tipFor : null; }
+    const prevBody = app.querySelector('.body');
+    const scrollTop = keepScroll && prevBody ? prevBody.scrollTop : 0;
+    const scr = (screens[name] || screens.welcome)(arg);
+    app.innerHTML = scr;
+    const body = app.querySelector('.body');
+    if (body) body.scrollTop = scrollTop;
+    lastRoute = key;
+    const el = app.querySelector('.scr');
+    if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
+    if (name === 'checkout' && !S.coachDone && cartLines()) {
+      const steps = checkoutSteps();
+      showCoach(el, steps[coachStep], coachStep, steps.length);
+    }
+  }
+
+  // ---------- actions ----------
+  const actions = {
+    go: (d) => { location.hash = d.to; },
+    back: () => { if (history.length > 1) history.back(); else location.hash = '#/home'; },
+    pdp: (d) => { location.hash = `#/pdp/${d.id}`; },
+    noop: () => {},
+    add: (d) => { S.cart[d.id] = 1; tipFor = route().name === 'pdp' ? 'pdp' : route().name === 'home' ? 'home' : null; save(); render(true); },
+    inc: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) + 1; save(); render(true); },
+    dec: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) - 1; if (S.cart[d.id] <= 0) delete S.cart[d.id]; save(); render(true); },
+    del: (d) => { delete S.cart[d.id]; save(); render(true); },
+    deli: (d) => { S.deli = d.v; save(); render(true); },
+    slot: (d) => { S.slot = Number(d.i); save(); render(true); },
+    pay: (d) => { S.payment = d.id; save(); render(true); },
+    points: () => { S.usePoints = !S.usePoints; save(); render(true); },
+    'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
+    'coach-next': () => { coachStep += 1; render(true); },
+    'coach-skip': () => { S.coachDone = true; save(); render(true); },
+    'coach-review': () => { coachStep = 0; render(true); },
+    'coach-done': () => { S.coachDone = true; save(); render(true); },
+  };
+
+  app.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el || !app.contains(el)) return;
+    // nút bên trong thẻ sản phẩm không mở PDP
+    e.stopPropagation();
+    const fn = actions[el.dataset.action];
+    if (fn) fn(el.dataset);
+  });
+
+  window.addEventListener('hashchange', () => { if (route().name !== 'checkout') coachStep = 0; render(false); });
+  render(false);
+})();
