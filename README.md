@@ -15,7 +15,7 @@ python3 -m http.server 8000
 
 - Trên điện thoại: giao diện hiển thị full màn hình.
 - Trên máy tính: hiển thị trong khung điện thoại 375×812.
-- **Reset để test với khách mới:** mở `#/reset` (ví dụ `http://localhost:8000/#/reset`). Lệnh này xóa giỏ hàng và cho các tooltip/coachmark hiện lại từ đầu.
+- **Reset để test với khách mới:** mở `#reset` (ví dụ `http://localhost:8000/#reset`). Lệnh này xóa giỏ hàng và cho các tooltip/coachmark hiện lại từ đầu.
 - Trạng thái (giỏ hàng, đã xem tooltip…) lưu trong `sessionStorage`, nên F5 không mất. Đóng tab là reset.
 
 ## Flow
@@ -58,7 +58,7 @@ Các phần này bấm vào không có tác dụng, để anh bổ sung sau:
 
 ## Ghi chú so với design
 
-- Ảnh xuất ở độ phân giải 1x (môi trường dev không truy cập trực tiếp được figma.com). Ảnh lớn ở PDP sẽ hơi mờ. Thay ảnh trong `assets/img/` bằng bản 2x là nét.
+- Ảnh sản phẩm lấy từ ảnh gốc trong Figma (604px). Các asset khác xuất ở 2x.
 - Màn PDP trong design là template (sữa DeliFres + Yakult). Prototype dùng layout đó nhưng hiển thị ảnh, giá, tên của đúng deal được bấm.
 - Giỏ hàng và Thanh toán hiển thị đúng các món user đã thêm. Các block mẫu trong design như "5 món tạm thời hết hàng", Mua chung, sản phẩm gợi ý… được lược bỏ vì không áp dụng cho user mới.
 - Tổng tiền, tiết kiệm và điểm dự kiến được tính từ giỏ hàng thật, trừ khuyến mãi mẫu "OneLife Club · Phiếu giảm giá 25k".
@@ -70,4 +70,4 @@ Repo đang **private**. GitHub Pages với repo private cần gói GitHub trả 
 
 - **Netlify Drop** (https://app.netlify.com/drop): kéo thả cả thư mục repo vào là có link ngay.
 - **Vercel / Cloudflare Pages**: import repo GitHub, không cần cấu hình build (output là thư mục gốc).
-- Nếu chuyển repo sang public: bật GitHub Pages (Settings → Pages → Deploy from branch `main`, thư mục `/`).
+- Nếu chuyển repo sang public: merge PR vào `main`, rồi vào Settings → Pages → Source: *Deploy from a branch* → Branch `main`, thư mục `/ (root)` → Save. Sau 1–2 phút link sẽ có dạng `https://hoangtravis-maker.github.io/ol_onboarding_flow/`.
