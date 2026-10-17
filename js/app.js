@@ -12,9 +12,10 @@
 
   // ---------- state (giữ trong sessionStorage để F5 không mất giỏ) ----------
   const KEY = 'ol-proto-v1';
-  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: 'olcard', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false });
+  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: 'olcard', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false, posAt: Date.now() });
   let S;
   try { S = JSON.parse(sessionStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); }
+  if (!S.posAt) S.posAt = Date.now();
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
   // trạng thái tạm thời theo màn (không lưu)
@@ -28,6 +29,8 @@
   const cartLines = () => cartItems().length;
   const subtotal = () => cartItems().reduce((s, i) => s + i.p.price * i.q, 0);
   const listTotal = () => cartItems().reduce((s, i) => s + i.p.oldPrice * i.q, 0);
+  // "Xem lại hướng dẫn": khách mới / churn online, trong N phút sau khi tích điểm ở POS
+  const replayLeft = () => (['new', 'churned'].includes(D.user.segment) ? S.posAt + D.replayMinutes * 60000 - Date.now() : 0);
   const orderDiscount = () => D.orderDiscounts.reduce((s, d) => s + d.amount, 0);
   const vById = Object.fromEntries(D.vouchers.map((v) => [v.id, v]));
   // lý do voucher chưa dùng được (null = dùng được)
@@ -171,6 +174,7 @@
           <a class="tab dim" data-action="noop" data-hold="reset"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
         </nav>
       </div>
+      ${replayLeft() > 0 ? `<a class="replay" data-action="replay">${icon('restart-line', 18)}<span>Xem lại hướng dẫn</span></a>` : ''}
       ${tipFor === 'home' && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart') : ''}
     </div>`;
   };
@@ -489,6 +493,21 @@
     tt.style.top = `${r.top - 4 - tt.offsetHeight}px`;
   }
 
+  // nút "Xem lại hướng dẫn": thu nhỏ khi đang cuộn, nở lại khi dừng; tự ẩn khi hết thời gian
+  let replayTimer = null;
+  function initReplay(scr) {
+    clearTimeout(replayTimer);
+    const btn = scr.querySelector('.replay');
+    if (!btn) return;
+    replayTimer = setTimeout(() => { if (route().name === 'home') render(true); }, replayLeft() + 50);
+    let idle = null;
+    scr.querySelector('.body').addEventListener('scroll', (e) => {
+      btn.classList.toggle('mini', e.target.scrollTop > 0);
+      clearTimeout(idle);
+      idle = setTimeout(() => btn.classList.remove('mini'), 700);
+    }, { passive: true });
+  }
+
   // ---------- router ----------
   function route() {
     const h = location.hash.replace(/^#\/?/, '') || 'welcome';
@@ -512,6 +531,7 @@
     if (toast) { app.insertAdjacentHTML('beforeend', `<div class="toast">${toast}</div>`); toast = null; }
     const el = app.querySelector('.scr');
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
+    if (name === 'home') initReplay(el);
     if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
       const steps = checkoutSteps();
       showCoach(el, steps[coachStep], coachStep, steps.length);
@@ -544,6 +564,8 @@
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
     'coach-next': () => { coachStep += 1; render(true); },
+    // xem lại onboarding từ đầu, giữ nguyên giỏ hàng
+    replay: () => { S.homeTipSeen = false; S.coachDone = false; coachStep = 0; save(); location.hash = '#/welcome'; },
     'coach-out': () => { coachAdvance(); render(true); },
     voucher: (d) => { S.voucher = S.voucher === d.id ? null : d.id; save(); render(true); },
     'coach-skip': () => { S.coachDone = true; save(); render(true); },

@@ -8,7 +8,13 @@ window.DATA = {
     pointsValue: '~200.000 đ',
     olCardBalance: '77.000 đ',
     voucherCount: 8,
+    // 'new' | 'churned' (lâu không mua online) | 'active' — nút "Xem lại hướng dẫn" chỉ hiện cho new / churned
+    segment: 'new',
   },
+
+  // Nút "Xem lại hướng dẫn" ở Home: chỉ hiện trong N phút kể từ lúc khách tích điểm / đặt đơn offline ở POS
+  // (prototype tính từ lúc mở màn đầu tiên hoặc lần reset gần nhất)
+  replayMinutes: 15,
 
   // Siêu thị nhận hàng — dùng chung cho Home, Checkout và coachmark
   store: {
