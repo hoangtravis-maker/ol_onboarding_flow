@@ -15,7 +15,7 @@ python3 -m http.server 8000
 
 - Trên điện thoại: giao diện hiển thị full màn hình.
 - Trên máy tính: hiển thị trong khung điện thoại 375×812.
-- **Reset để test với khách mới:** mở `#reset` (ví dụ `http://localhost:8000/#reset`). Lệnh này xóa giỏ hàng và cho các tooltip/coachmark hiện lại từ đầu.
+- **Reset để test với khách mới:** mở `#reset` (ví dụ `http://localhost:8000/#reset`). Lệnh này xóa giỏ hàng và cho các tooltip/coachmark hiện lại từ đầu. Ngay trên prototype: **ấn giữ 3 giây** vào nút menu (góc trái header Home) hoặc avatar ở tab bar, có thông báo "Đã làm mới, sẵn sàng cho khách mới" và quay về màn đầu.
 - Trạng thái (giỏ hàng, đã xem tooltip…) lưu trong `sessionStorage`, nên F5 không mất. Đóng tab là reset.
 
 ## Flow

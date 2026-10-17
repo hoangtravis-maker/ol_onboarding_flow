@@ -20,6 +20,7 @@
   // trạng thái tạm thời theo màn (không lưu)
   let tipFor = null;      // 'home' | 'pdp' — tooltip "Đã thêm, bấm giỏ hàng để đặt"
   let coachStep = 0;      // bước coachmark ở checkout
+  let toast = null;       // thông báo ngắn hiện 1 lần sau lần render kế tiếp
   let guide = null;       // { tab, step } khi đang mở hướng dẫn chuyển khoản
 
   const cartItems = () => Object.entries(S.cart).filter(([, q]) => q > 0).map(([id, q]) => ({ p: byId[id], q }));
@@ -118,7 +119,7 @@
     return `
     <div class="scr scr-home">
       <div class="home-hd">
-        <button class="hd-circle" data-action="noop" aria-label="Menu">${icon('menu-line', 20)}</button>
+        <button class="hd-circle" data-action="noop" data-hold="reset" aria-label="Menu">${icon('menu-line', 20)}</button>
         <div class="hd-search" data-action="noop"><span>Meatcool giảm giá 30%</span>${icon('search-line', 20, 'c-brand')}</div>
         <button class="hd-btn" data-action="noop" aria-label="Voucher"><img src="assets/img/hdr-coupon.webp" width="19" height="19" alt=""><span class="badge">${u.voucherCount}</span></button>
         <button class="hd-glass" data-action="noop" aria-label="Thông báo">${icon('notification-3-line', 20)}<i class="dot"></i></button>
@@ -167,7 +168,7 @@
           <a class="tab" data-action="noop">${icon('price-tag-3-line', 24)}<span>Khuyến mãi</span></a>
           <a class="tab-qr" data-action="noop"><img src="assets/img/tab-qr.webp" width="52" height="52" alt="Quét mã"></a>
           <a class="tab dim" data-action="go" data-to="#/cart"><i class="tab-cart">${icon('shopping-cart-2-line', 24)}${n ? `<span class="badge badge-dk">${n}</span>` : ''}</i><span>Giỏ hàng</span></a>
-          <a class="tab dim" data-action="noop"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
+          <a class="tab dim" data-action="noop" data-hold="reset"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
         </nav>
       </div>
       ${tipFor === 'home' && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart') : ''}
@@ -508,6 +509,7 @@
     const body = app.querySelector('.body');
     if (body) body.scrollTop = scrollTop;
     lastRoute = key;
+    if (toast) { app.insertAdjacentHTML('beforeend', `<div class="toast">${toast}</div>`); toast = null; }
     const el = app.querySelector('.scr');
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
     if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
@@ -562,6 +564,26 @@
     const fn = actions[el.dataset.action];
     if (fn) fn(el.dataset);
   });
+
+  // Reset cho khách mới: ấn giữ 3s vào nút menu (góc trái header Home) hoặc avatar ở tab bar
+  const HOLD_MS = 3000;
+  let holdTimer = null, held = false;
+  const holdEnd = () => { clearTimeout(holdTimer); holdTimer = null; };
+  app.addEventListener('pointerdown', (e) => {
+    held = false;
+    if (!e.target.closest('[data-hold="reset"]')) return;
+    holdEnd();
+    holdTimer = setTimeout(() => {
+      holdTimer = null; held = true;
+      S = fresh(); save(); coachStep = 0; guide = null; tipFor = null;
+      toast = 'Đã làm mới, sẵn sàng cho khách mới';
+      if (route().name === 'welcome') render(false); else location.hash = '#/welcome';
+    }, HOLD_MS);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => app.addEventListener(t, holdEnd, true));
+  // chặn click phát sinh ngay sau khi giữ, và menu ngữ cảnh khi giữ lâu trên mobile
+  app.addEventListener('click', (e) => { if (held) { held = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  app.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-hold]')) e.preventDefault(); });
 
   window.addEventListener('hashchange', () => { if (route().name !== 'checkout') coachStep = 0; guide = null; render(false); });
   render(false);
