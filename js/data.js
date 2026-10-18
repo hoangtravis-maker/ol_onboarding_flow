@@ -16,10 +16,24 @@ window.DATA = {
   // (prototype tính từ lúc mở màn đầu tiên hoặc lần reset gần nhất)
   replayMinutes: 15,
 
-  // Siêu thị nhận hàng — dùng chung cho Home, Checkout và coachmark
-  store: {
-    name: 'Kingfoodmart - Chung cư Era Town',
-    address: 'Tầng trệt B4, Phường Tân Mỹ, Thành phố Hồ Chí Minh',
+  // Danh sách siêu thị ("Đổi siêu thị"). Siêu thị đầu tiên là mặc định;
+  // siêu thị đang chọn dùng chung cho Home, Checkout (giao hàng & nhận tại siêu thị) và coachmark
+  stores: [
+    { id: 'era', name: 'Kingfoodmart - Chung cư Era Town', address: 'Tầng trệt B4, Phường Tân Mỹ, Thành phố Hồ Chí Minh', dist: '0.3km', close: '22:00' },
+    { id: 'riviera', name: 'Kingfoodmart - A-14-15-16-17 The Infinity, Chung cư Riviera Point', address: 'Phường Tân Mỹ, Thành phố Hồ Chí Minh', dist: '0.5km', close: '22:00' },
+    { id: 'scenic', name: 'Kingfoodmart - Chung cư Scenic Valley 2, Block B', address: 'Phường Tân Mỹ, Thành phố Hồ Chí Minh', dist: '0.7km', close: '22:00' },
+    { id: 'golden', name: 'Kingfoodmart - Chung cư The Golden Star, B01.01', address: 'Phường Tân Thuận, Thành phố Hồ Chí Minh', dist: '0.8km', close: '22:00' },
+    { id: 'tanmy31', name: 'Kingfoodmart - 31 Tân Mỹ', address: 'Phường Tân Mỹ, Thành phố Hồ Chí Minh', dist: '0.9km', close: '22:00' },
+    { id: 'midtown', name: 'Kingfoodmart - 17 Đường 16 - Midtown Phú Mỹ Hưng', address: 'Phường Tân Mỹ, Thành phố Hồ Chí Minh', dist: '1.0km', close: '22:00' },
+  ],
+
+  // Checkout > Giao hàng (data mẫu)
+  delivery: {
+    receiver: 'Anh Triều',
+    address: '67 đường Hoàng Văn Thái, Phường Tân Mỹ, Thành phố Hồ Chí Minh',
+    days: ['Hôm nay', 'Ngày mai'],
+    slots: ['15:00 - 16:00', '16:00 - 17:00', '17:00 - 18:00', '18:00 - 19:00'],
+    fee: 20000,
   },
 
   pickup: {
@@ -66,15 +80,27 @@ window.DATA = {
 
   dealTabs: ['⭐️ Deals cho anh Triều', 'Khuyến mãi HOT', 'Rau sạch', 'Giá tốt', 'Mua là tặng'],
 
-  // Checkout > Chọn khuyến mãi — dùng 1 voucher giảm hóa đơn mỗi đơn
+  // Checkout > Chọn khuyến mãi / "Ưu đãi của bạn" — dùng 1 voucher mỗi đơn
   //   off: giảm cố định (đ) · pct + max: giảm % tối đa · min: giá trị đơn tối thiểu
-  //   pickupNA: không áp dụng cho đơn nhận tại siêu thị (VD voucher vận chuyển)
+  //   ship: giảm phí giao hàng (chỉ dùng khi chọn Giao hàng)
+  //   productIds: chỉ áp dụng khi giỏ có 1 trong các sản phẩm này
   vouchers: [
-    { id: 'new12', kind: 'percent', imgTitle: 'PHIẾU GIẢM GIÁ %', title: 'Giảm 12% tối đa 50.000 đ', cond: 'Cho đơn từ 100.000 đ', expiry: 'Hạn dùng: 31/10/2026', pct: 12, max: 50000, min: 100000 },
-    { id: 'new20k', kind: 'cash', imgTitle: 'PHIẾU GIẢM GIÁ TIỀN MẶT', title: 'Giảm 20.000 đ', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 31/10/2026', off: 20000, min: 0, qty: 2 },
-    { id: 'ship', kind: 'ship', imgTitle: 'MIỄN PHÍ VẬN CHUYỂN', imgSub: 'Đơn từ 500k', title: 'Giảm 20.000 đ phí vận chuyển', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 31/10/2026', pickupNA: true },
+    { id: 'new12', kind: 'percent', imgTitle: 'PHIẾU GIẢM GIÁ %', title: 'Giảm 12% tối đa 50.000 đ', cond: 'Cho đơn từ 100.000 đ', expiry: 'Dùng ngày: 31/10/2026', pct: 12, max: 50000, min: 100000 },
+    { id: 'new20k', kind: 'cash', imgTitle: 'PHIẾU GIẢM GIÁ TIỀN MẶT', title: 'Giảm 20.000 đ', cond: 'Đơn bất kỳ', expiry: 'Dùng ngày: 31/10/2026', off: 20000, min: 0, qty: 2 },
+    { id: 'p7', kind: 'percent', imgTitle: 'PHIẾU GIẢM GIÁ', title: 'Giảm 7% tối đa 20k cho đơn 200k', cond: 'Cho đơn từ 200.000 đ', expiry: 'Dùng ngày: 18/10/2026', pct: 7, max: 20000, min: 200000 },
+    { id: 'ship', kind: 'ship', imgTitle: 'MIỄN PHÍ VẬN CHUYỂN', imgSub: 'Đơn từ 500k', title: 'Giảm 20.000 đ phí vận chuyển', cond: 'Cho đơn từ 500.000 đ', expiry: 'Dùng ngày: 31/10/2026', ship: true, off: 20000, min: 500000 },
+    { id: 'c35', kind: 'cash', imgTitle: 'VOUCHER CUỐI TUẦN', title: 'Giảm 35k cho đơn 600k', cond: 'Cho đơn từ 600.000 đ', expiry: 'Dùng ngày: 18/10/2026', off: 35000, min: 600000 },
+    { id: 'chinsu', kind: 'percent', imgTitle: 'VOUCHER GIẢM 20%', title: 'Giảm 20% tối đa 20K cho đơn Chinsu 88k', cond: 'Đơn có sản phẩm Chinsu', expiry: 'Dùng ngày: 21/10/2026', pct: 20, max: 20000, min: 88000, productIds: ['chinsu'] },
+    { id: 'c12', kind: 'cash', imgTitle: 'PHIẾU GIẢM GIÁ', title: 'Giảm 12k cho đơn 330k', cond: 'Cho đơn từ 330.000 đ', expiry: 'Dùng ngày: 22/10/2026', off: 12000, min: 330000 },
   ],
 
+  // Trang Search (thiết kế OLA_Revision — search.focus.full)
+  search: {
+    placeholder: 'Tìm sản phẩm',
+    recent: ['Chả lụa', 'Gạo ST25', 'Nước ép nho'],
+    viewedIds: ['tao-cherry', 'cai-ngot', 'rau-mui', 'chabaa'],
+    reorderIds: ['cha-lua', 'gao', 'cha-ca', 'chabaa', 'tao-cherry', 'rau-mui'],
+  },
 
   // guide: true → hiện mô tả + link "Xem hướng dẫn" mở bottom sheet hướng dẫn chuyển khoản
   payments: [
