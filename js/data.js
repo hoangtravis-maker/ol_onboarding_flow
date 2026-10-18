@@ -111,6 +111,11 @@ window.DATA = {
     { id: 'applepay', label: 'Apple Pay', img: 'assets/img/pay-applepay.webp' },
     { id: 'momo', label: 'Ví MoMo', img: 'assets/img/pay-momo.webp' },
   ],
+  // Ô "Thêm liên kết thẻ" dưới danh sách phương thức thanh toán
+  payAdd: {
+    label: 'Thêm liên kết thẻ với VNPAY',
+    desc: 'Chọn để thêm Thẻ ATM hoặc Thẻ quốc tế (VISA, MASTER CARD) với VNPAY',
+  },
   paymentNotes: [
     'Không áp dụng Tiền mặt cho đơn trên 2 triệu',
     'Không áp dụng Tiền mặt cho đơn có sản phẩm Bia Rượu, Nước có cồn',

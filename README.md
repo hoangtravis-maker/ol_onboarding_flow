@@ -107,7 +107,7 @@ Toàn bộ text, giá, sản phẩm, siêu thị, địa chỉ giao, khung giờ
 | `products`, `dealIds`, `homeDeals`, `recommendIds` | Sản phẩm và nơi hiển thị |
 | `vouchers` | Voucher và điều kiện (`min`, `pct`/`max`, `off`, `ship`, `productIds`) |
 | `search` | Từ khoá gần đây, sản phẩm đã xem, đặt lại |
-| `payments`, `paymentNotes`, `bankGuide` | Phương thức thanh toán và hướng dẫn chuyển khoản |
+| `payments`, `payAdd`, `paymentNotes`, `bankGuide` | Phương thức thanh toán, ô "Thêm liên kết thẻ", ghi chú và hướng dẫn chuyển khoản |
 
 ## Cấu trúc
 

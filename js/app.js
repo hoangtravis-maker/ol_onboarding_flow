@@ -382,8 +382,8 @@
               <div class="grow"><p>${m.label}</p>${m.sub ? `<small class="${m.guide ? 'pay-desc' : ''}">${m.sub}${m.guide ? ' <a class="pay-guide" data-action="guide-open">Xem hướng dẫn</a>' : ''}</small>` : ''}</div>
             </div>`).join('')}
             <div class="pay-add">
-              <a data-action="noop">${icon('add-line', 20)}Thêm liên kết thẻ với VNPAY</a>
-              <p>Chọn để thêm Thẻ ATM hoặc Thẻ quốc tế (VISA, MASTER CARD) với VNPAY. Sau khi thêm thẻ, bạn sẽ được quay về trang thanh toán để tiếp tục đặt đơn</p>
+              <a data-action="noop">${icon('add-line', 20)}${D.payAdd.label}</a>
+              <p>${D.payAdd.desc}</p>
             </div>
           </div>
           <div class="pay-notes">${D.paymentNotes.map((t) => `<p>${t}</p>`).join('')}</div>
