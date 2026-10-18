@@ -47,8 +47,6 @@
     return null;
   };
   const voucherAmount = (v, sum) => (v.ship ? Math.min(v.off, shipFee()) : v.pct ? Math.min(Math.round(sum * v.pct / 100 / 1000) * 1000, v.max) : v.off);
-  // khả dụng lên trước, giữ thứ tự trong data
-  const sortedVouchers = (sum) => [...D.vouchers].sort((a, b) => !!voucherBlock(a, sum) - !!voucherBlock(b, sum));
   // voucher đang áp dụng; tự gỡ nếu đơn không còn đủ điều kiện
   const appliedVoucher = (sum) => {
     const v = vById[S.voucher];
@@ -285,6 +283,9 @@
   };
 
   // 5. Checkout
+  // giữ "đ" cùng dòng với số tiền
+  const nb = (t) => t.replace(/ đ/g, '&nbsp;đ');
+  const MERCHANT = '<p class="vc-mer"><img class="vc-logo" src="assets/img/ic-merchant-ol.svg" width="12" height="12" alt="">ONELIFE</p>';
   const voucherImg = (v) => {
     if (v.kind === 'ship') return `<div class="vc-img vc-ship"><b>${v.imgTitle}</b><em>${v.imgSub}</em><i class="vc-tag">MEMBER</i><span class="vc-circle">${icon('takeaway-fill', 24)}</span></div>`;
     if (v.kind === 'percent') return `<div class="vc-img vc-pct"><b>${v.imgTitle}</b><span class="vc-circle">${icon('coin-fill', 24)}</span></div>`;
@@ -353,14 +354,13 @@
           <div id="co-s4-top">
             ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="go" data-to="#/vouchers">Xem tất cả</a>')}
             <div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div>
-            <div class="vc-list">${sortedVouchers(sum).slice(0, 4).map((v) => {
-              const block = voucherBlock(v, sum);
+            <div class="vc-list">${D.vouchers.filter((v) => !voucherBlock(v, sum)).slice(0, 4).map((v) => {
               const on = vc === v;
               return `
-              <div class="vc ${on ? 'applied' : ''} ${block ? 'vc-na' : ''}">
+              <div class="vc ${on ? 'applied' : ''}">
                 ${voucherImg(v)}
-                <div class="vc-txt"><p class="vc-mer"><i></i>KINGFOODMART</p><p class="vc-title">${v.title}</p><p class="vc-cond ${block ? 'c-danger' : ''}">${block || v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
-                ${block ? '' : `<a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>`}
+                <div class="vc-txt">${MERCHANT}<p class="vc-title">${nb(v.title)}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
+                <a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>
                 ${v.qty ? `<span class="vc-qty">x${v.qty}</span>` : ''}
               </div>`;
             }).join('')}
@@ -441,7 +441,7 @@
     <div class="vcl ${block ? 'na' : ''}" ${block ? '' : `data-action="vc-pick" data-id="${v.id}"`}>
       <div class="vcl-main">
         ${voucherImg(v)}
-        <div class="vcl-txt"><p class="vc-mer"><i></i>KINGFOODMART</p><p class="vcl-title">${v.title}</p><p class="vc-exp">${v.expiry}</p></div>
+        <div class="vcl-txt">${MERCHANT}<p class="vcl-title">${nb(v.title)}</p><p class="vc-exp">${v.expiry}</p></div>
         ${block ? '<span class="vcl-use">Dùng</span>' : `<span class="cb ${vcPick === v.id ? 'on' : ''}"></span>`}
       </div>
       ${block ? `<p class="vcl-why">${block}</p>` : ''}

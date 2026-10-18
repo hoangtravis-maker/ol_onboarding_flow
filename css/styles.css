@@ -394,11 +394,11 @@ textarea { font: inherit; }
 .vc-pct .vc-circle { background: #bbd9ff; color: var(--brand); }
 .vc-txt { position: absolute; left: 106px; right: 68px; top: 10px; bottom: 10px; }
 .vc-mer { display: flex; align-items: center; gap: 8px; font-size: 10px; line-height: 12px; font-weight: 600; color: var(--tertiary); }
-.vc-mer i { width: 12px; height: 12px; border-radius: 50%; background: var(--brand); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--divider); }
-.vc-title { margin-top: 4px; height: 40px; color: var(--warning); font-size: 14px; line-height: 20px; font-weight: 600; }
-.vc-cond { margin-top: 2px; font-size: 12px; line-height: 16px; }
+.vc-logo { width: 12px; height: 12px; flex-shrink: 0; }
+.vc-title { margin-top: 4px; height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: var(--warning); font-size: 14px; line-height: 20px; font-weight: 600; }
+.vc-txt .vc-exp { position: absolute; left: 0; right: 0; top: 76px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vc-cond { margin-top: 2px; font-size: 12px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vc-exp { font-size: 12px; line-height: 16px; color: var(--tertiary); }
-.vc-na .vc-img, .vc-na .vc-title { opacity: 0.45; }
 .c-danger { color: var(--danger); }
 .vc-act { position: absolute; right: 16px; top: 44px; color: var(--brand); font-size: 14px; line-height: 20px; font-weight: 600; }
 .vc-qty { position: absolute; right: 16px; top: 0; width: 32px; padding: 4px 2px; background: var(--safe); color: #fff; border-radius: 0 0 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; text-align: center; }

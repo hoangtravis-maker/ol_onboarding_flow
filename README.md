@@ -66,8 +66,8 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 | Hóa đơn | Không có phí giao | Thêm dòng "Phí vận chuyển"; nếu áp voucher giảm phí vận chuyển thì "Tổng khuyến mãi" có dòng "Giảm giá phí vận chuyển" |
 
 - **Đổi** siêu thị (cả 2 chế độ): sang Đổi siêu thị.
-- **Chọn khuyến mãi**: hiện 4 voucher đầu (khả dụng lên trước). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn.
-- Mỗi đơn dùng 1 voucher. Voucher chưa đủ điều kiện hiện mờ kèm lý do. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
+- **Chọn khuyến mãi**: chỉ hiện voucher dùng được cho đơn hiện tại (tối đa 4). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn (có cả voucher không khả dụng).
+- Mỗi đơn dùng 1 voucher. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
 - Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng).
 - **Coachmark 4 bước** (lần đầu vào): Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra cách thanh toán → Đặt đơn là xong.
   - Nút: Bỏ qua / Tiếp tục / Xem lại / Đã hiểu.
