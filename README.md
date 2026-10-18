@@ -63,7 +63,7 @@ Các phần này bấm vào không có tác dụng, để anh bổ sung sau:
 - Giỏ hàng và Thanh toán hiển thị đúng các món user đã thêm. Các block mẫu trong design như "5 món tạm thời hết hàng", Mua chung… được lược bỏ vì không áp dụng cho user mới.
 - Siêu thị nhận hàng dùng chung một nguồn (`store` trong `js/data.js`) cho Home, Thanh toán và coachmark.
 - Sản phẩm "Thường được mua kèm" (tên, giá) là data mẫu, ảnh lấy từ ảnh chụp app.
-- Tổng tiền, tiết kiệm và điểm dự kiến được tính từ giỏ hàng thật, trừ khuyến mãi mẫu "OneLife Club · Phiếu giảm giá 25k".
+- Tổng tiền, tiết kiệm và điểm dự kiến được tính từ giỏ hàng thật, trừ đúng voucher khách đang áp dụng (không có khuyến mãi mặc định).
 - Không vẽ status bar giả (9:41…), vì prototype chạy trên trình duyệt điện thoại thật.
 
 ## Host để test với khách
