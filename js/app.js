@@ -31,15 +31,22 @@
   const listTotal = () => cartItems().reduce((s, i) => s + i.p.oldPrice * i.q, 0);
   // "Xem lại hướng dẫn": khách mới / churn online, trong N phút sau khi tích điểm ở POS
   const replayLeft = () => (['new', 'churned'].includes(D.user.segment) ? S.posAt + D.replayMinutes * 60000 - Date.now() : 0);
-  const orderDiscount = () => D.orderDiscounts.reduce((s, d) => s + d.amount, 0);
+  // siêu thị đang chọn (mặc định: siêu thị đầu tiên trong data)
+  const store = () => D.stores.find((x) => x.id === S.storeId) || D.stores[0];
+  const isShip = () => S.deli === 'ship';
+  // ngày / khung giờ theo phương thức giao
+  const timeCfg = () => (isShip() ? D.delivery : D.pickup);
+  const slotText = () => timeCfg().slots[S.slot] || timeCfg().slots[0];
+  const shipFee = () => (isShip() ? D.delivery.fee : 0);
   const vById = Object.fromEntries(D.vouchers.map((v) => [v.id, v]));
   // lý do voucher chưa dùng được (null = dùng được)
   const voucherBlock = (v, sum) => {
-    if (v.pickupNA) return 'Không áp dụng cho đơn nhận tại siêu thị';
-    if (sum < v.min) return `Mua thêm ${fmt(v.min - sum)} đ để dùng`;
+    if (v.ship && !isShip()) return 'Không áp dụng cho đơn nhận tại siêu thị';
+    if (v.productIds && !v.productIds.some((id) => S.cart[id])) return 'Đơn hàng chưa có sản phẩm thuộc chương trình ưu đãi';
+    if (sum < v.min) return `Mua thêm ${fmt(v.min - sum)}đ để sử dụng được voucher`;
     return null;
   };
-  const voucherAmount = (v, sum) => (v.pct ? Math.min(Math.round(sum * v.pct / 100 / 1000) * 1000, v.max) : v.off);
+  const voucherAmount = (v, sum) => (v.ship ? Math.min(v.off, shipFee()) : v.pct ? Math.min(Math.round(sum * v.pct / 100 / 1000) * 1000, v.max) : v.off);
   // voucher đang áp dụng; tự gỡ nếu đơn không còn đủ điều kiện
   const appliedVoucher = (sum) => {
     const v = vById[S.voucher];
@@ -79,9 +86,10 @@
     </div>`;
 
   // card.product.normal.sm — "Thường được mua kèm"
-  const recCard = (p) => `
-    <div class="rcard">
-      <div class="rcard-img" data-action="pdp" data-id="${p.id}"><img src="${p.img}" width="132" height="132" alt="${p.name}"><span class="rcard-disc">-${p.discount}%</span></div>
+  // grid = card.product.normal 2 cột (Search > Đặt lại sản phẩm, kết quả tìm kiếm)
+  const recCard = (p, grid = false) => `
+    <div class="rcard ${grid ? 'pcard' : ''}">
+      <div class="rcard-img" data-action="pdp" data-id="${p.id}"><img src="${p.img}" width="132" height="132" alt="${p.name}"><span class="rcard-disc">-${p.discount}%</span>${grid ? '<span class="pcard-badge b-blue">Ưu đãi online</span>' : ''}</div>
       <p class="rcard-price">${fmt(p.price)}<small> đ</small></p>
       <p class="rcard-old"><s>${fmt(p.oldPrice)} đ</s> <b class="c-safe2">Tiết kiệm ${fmt((p.oldPrice - p.price) / 1000)}k</b></p>
       <p class="rcard-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
@@ -123,14 +131,14 @@
     <div class="scr scr-home">
       <div class="home-hd">
         <button class="hd-circle" data-action="noop" data-hold="reset" aria-label="Menu">${icon('menu-line', 20)}</button>
-        <div class="hd-search" data-action="noop"><span>Meatcool giảm giá 30%</span>${icon('search-line', 20, 'c-brand')}</div>
+        <div class="hd-search" data-action="go" data-to="#/search"><span>Meatcool giảm giá 30%</span>${icon('search-line', 20, 'c-brand')}</div>
         <button class="hd-btn" data-action="noop" aria-label="Voucher"><img src="assets/img/hdr-coupon.webp" width="19" height="19" alt=""><span class="badge">${u.voucherCount}</span></button>
         <button class="hd-glass" data-action="noop" aria-label="Thông báo">${icon('notification-3-line', 20)}<i class="dot"></i></button>
       </div>
       <div class="body">
         <div class="deli">
           <div class="deli-seg"><span>Giao trong 2h</span><span class="on">Đến nhận</span></div>
-          <div class="deli-store" data-action="noop"><span>tại</span><span class="ell">${D.store.name}, ${D.store.address}</span>${icon('arrow-down-s-line', 16)}</div>
+          <div class="deli-store" data-action="go" data-to="#/stores"><span>tại</span><span class="ell">${store().name}, ${store().address}</span>${icon('arrow-down-s-line', 16)}</div>
         </div>
         <div class="member">
           <img class="member-bg" src="assets/img/member-bg.webp" width="360" height="133" alt="">
@@ -275,6 +283,9 @@
   };
 
   // 5. Checkout
+  // giữ "đ" cùng dòng với số tiền
+  const nb = (t) => t.replace(/ đ/g, '&nbsp;đ');
+  const MERCHANT = '<p class="vc-mer"><img class="vc-logo" src="assets/img/ic-merchant-ol.svg" width="12" height="12" alt="">ONELIFE</p>';
   const voucherImg = (v) => {
     if (v.kind === 'ship') return `<div class="vc-img vc-ship"><b>${v.imgTitle}</b><em>${v.imgSub}</em><i class="vc-tag">MEMBER</i><span class="vc-circle">${icon('takeaway-fill', 24)}</span></div>`;
     if (v.kind === 'percent') return `<div class="vc-img vc-pct"><b>${v.imgTitle}</b><span class="vc-circle">${icon('coin-fill', 24)}</span></div>`;
@@ -286,8 +297,9 @@
     const sum = subtotal();
     const vc = appliedVoucher(sum);
     const vcAmt = vc ? voucherAmount(vc, sum) : 0;
-    const disc = Math.min(orderDiscount() + vcAmt, sum);
-    const total = sum - disc;
+    const fee = shipFee();
+    const disc = Math.min(vcAmt, sum + fee);
+    const total = sum + fee - disc;
     const saving = listTotal() - sum + disc;
     const points = Math.round(total / 1000);
     return `
@@ -302,19 +314,30 @@
           </div>
         </section>
         <section class="co-sec" id="co-s2">
+          ${isShip() ? `
+          ${titleCheckout(2, 'Chọn địa chỉ giao')}
+          <div class="co-addr">
+            <i class="co-pinic">${icon('map-pin-2-line', 20)}</i>
+            <p class="grow co-ship-txt"><span class="co-ship-to">Giao đến <b>${D.delivery.receiver}</b></span><span class="co-ship-addr">${D.delivery.address}</span></p>
+            <a data-action="noop">Đổi</a>
+          </div>
+          <div class="co-serve">
+            <div class="grow"><small>Siêu thị phục vụ bạn</small><b>${store().name}, ${store().address}</b></div>
+            <a data-action="go" data-to="#/stores">Đổi</a>
+          </div>` : `
           ${titleCheckout(2, 'Chọn nơi nhận')}
           <div class="co-addr">
             <i class="co-storeic">${icon('store-2-line', 20)}</i>
-            <p class="grow co-addr-txt">Nhận tại <b>${D.store.name}, ${D.store.address}</b></p>
-            <a data-action="noop">Đổi</a>
-          </div>
+            <p class="grow co-addr-txt">Nhận tại <b>${store().name}, ${store().address}</b></p>
+            <a data-action="go" data-to="#/stores">Đổi</a>
+          </div>`}
         </section>
         <section class="co-sec" id="co-s3">
-          ${titleCheckout(3, 'Chọn giờ nhận')}
+          ${titleCheckout(3, isShip() ? 'Chọn giờ giao' : 'Chọn giờ nhận')}
           <div class="co-order">
             <div class="co-slots-wrap" id="co-slots">
-              <div class="co-days">${D.pickup.days.map((d, i) => `<button class="chip ${(S.day || 0) === i ? 'on' : ''}" data-action="day" data-i="${i}">${d}</button>`).join('')}</div>
-              <div class="co-slots">${D.pickup.slots.map((s, i) => `<button class="${S.slot === i ? 'on' : ''}" data-action="slot" data-i="${i}">${s}</button>`).join('')}</div>
+              <div class="co-days">${timeCfg().days.map((d, i) => `<button class="chip ${(S.day || 0) === i ? 'on' : ''}" data-action="day" data-i="${i}">${d}</button>`).join('')}</div>
+              <div class="co-slots">${timeCfg().slots.map((s, i) => `<button class="${S.slot === i ? 'on' : ''}" data-action="slot" data-i="${i}">${s}</button>`).join('')}</div>
             </div>
             <div class="co-items">
               ${items.map(({ p, q }) => `
@@ -329,16 +352,15 @@
         </section>
         <section class="co-sec co-sec-promo" id="co-s4">
           <div id="co-s4-top">
-            ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="noop">Xem tất cả</a>')}
+            ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="go" data-to="#/vouchers">Xem tất cả</a>')}
             <div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div>
-            <div class="vc-list">${D.vouchers.map((v) => {
-              const block = voucherBlock(v, sum);
+            <div class="vc-list">${D.vouchers.filter((v) => !voucherBlock(v, sum)).slice(0, 4).map((v) => {
               const on = vc === v;
               return `
-              <div class="vc ${on ? 'applied' : ''} ${block ? 'vc-na' : ''}">
+              <div class="vc ${on ? 'applied' : ''}">
                 ${voucherImg(v)}
-                <div class="vc-txt"><p class="vc-mer"><i></i>ONELIFE</p><p class="vc-title">${v.title}</p><p class="vc-cond ${block ? 'c-danger' : ''}">${block || v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
-                ${block ? '' : `<a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>`}
+                <div class="vc-txt">${MERCHANT}<p class="vc-title">${nb(v.title)}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
+                <a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>
                 ${v.qty ? `<span class="vc-qty">x${v.qty}</span>` : ''}
               </div>`;
             }).join('')}
@@ -360,8 +382,8 @@
               <div class="grow"><p>${m.label}</p>${m.sub ? `<small class="${m.guide ? 'pay-desc' : ''}">${m.sub}${m.guide ? ' <a class="pay-guide" data-action="guide-open">Xem hướng dẫn</a>' : ''}</small>` : ''}</div>
             </div>`).join('')}
             <div class="pay-add">
-              <a data-action="noop">${icon('add-line', 20)}Thêm liên kết thẻ với VNPAY</a>
-              <p>Chọn để thêm Thẻ ATM hoặc Thẻ quốc tế (VISA, MASTER CARD) với VNPAY. Sau khi thêm thẻ, bạn sẽ được quay về trang thanh toán để tiếp tục đặt đơn</p>
+              <a data-action="noop">${icon('add-line', 20)}${D.payAdd.label}</a>
+              <p>${D.payAdd.desc}</p>
             </div>
           </div>
           <div class="pay-notes">${D.paymentNotes.map((t) => `<p>${t}</p>`).join('')}</div>
@@ -369,12 +391,12 @@
         <section class="co-sec" id="co-s6">
           ${titleCheckout(6, 'Kiểm tra thông tin hóa đơn')}
           <div class="sum">
-            <div class="sum-row"><span>Tạm tính</span><b>${fmt(sum)} đ</b></div>
-            <div class="sum-row"><span>Khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
-            <div class="sum-sub">${D.orderDiscounts.map((d) => `
-              <div class="sum-row"><span>${d.club ? '<i class="club"></i>' : ''}${d.label}</span><b class="c-safe">-${fmt(d.amount)} đ</b></div>`).join('')}
-              ${vc ? `<div class="sum-row"><span>Voucher · ${vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div>` : ''}
-            </div>
+            <div class="sum-row"><span>Tổng tạm tính</span><b>${fmt(sum)} đ</b></div>
+            ${isShip() ? `<div class="sum-row"><span>Phí vận chuyển</span><b>${fmt(fee)} đ</b></div>` : ''}
+            ${vc ? `
+            <div class="sum-row"><span>Tổng khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
+            <div class="sum-sub"><div class="sum-row"><span>${vc.ship ? 'Giảm giá phí vận chuyển' : vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div></div>` : `
+            <div class="sum-row"><span>Tổng khuyến mãi</span><b>0 đ</b></div>`}
             <hr>
             <div class="sum-row sum-total"><span>Tổng cộng</span><b>${fmt(total)} đ</b></div>
           </div>
@@ -413,12 +435,92 @@
     </div>`;
   };
 
+  // 6. "Ưu đãi của bạn" — mở từ "Xem tất cả" ở Checkout
+  let vcPick;             // voucher đang tick trong màn này (chưa áp dụng)
+  const vcCard = (v, block) => `
+    <div class="vcl ${block ? 'na' : ''}" ${block ? '' : `data-action="vc-pick" data-id="${v.id}"`}>
+      <div class="vcl-main">
+        ${voucherImg(v)}
+        <div class="vcl-txt">${MERCHANT}<p class="vcl-title">${nb(v.title)}</p><p class="vc-exp">${v.expiry}</p></div>
+        ${block ? '<span class="vcl-use">Dùng</span>' : `<span class="cb ${vcPick === v.id ? 'on' : ''}"></span>`}
+      </div>
+      ${block ? `<p class="vcl-why">${block}</p>` : ''}
+    </div>`;
+  screens.vouchers = () => {
+    const sum = subtotal();
+    if (vcPick === undefined) vcPick = appliedVoucher(sum) ? S.voucher : null;
+    const ok = D.vouchers.filter((v) => !voucherBlock(v, sum));
+    const na = D.vouchers.filter((v) => voucherBlock(v, sum));
+    return `
+    <div class="scr scr-vcl">
+      <div class="appbar bordered"><button class="appbar-l" data-action="back" aria-label="Đóng">${icon('close-line')}</button><h1>Ưu đãi của bạn</h1></div>
+      <div class="vcl-code"><div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div></div>
+      <div class="body">
+        ${ok.map((v) => vcCard(v)).join('')}
+        ${na.length ? `<h2 class="vcl-h">Voucher không khả dụng</h2>${na.map((v) => vcCard(v, voucherBlock(v, sum))).join('')}` : ''}
+      </div>
+      <div class="foot vcl-foot"><button class="btn-l" data-action="vc-apply" ${vcPick === (appliedVoucher(sum) ? S.voucher : null) ? 'disabled' : ''}>Áp dụng</button></div>
+    </div>`;
+  };
+
+  // 7. "Đổi siêu thị" — mở từ nút "Đổi" ở Checkout (giao hàng & nhận tại siêu thị) và thanh siêu thị ở Home
+  let storeQ = '';
+  const storeRows = () => {
+    const q = storeQ.trim().toLowerCase();
+    const list = D.stores.filter((x) => !q || `${x.name} ${x.address}`.toLowerCase().includes(q));
+    return list.length ? list.map((x) => `
+      <div class="st-row" data-action="store-pick" data-id="${x.id}">
+        <span class="radio ${store().id === x.id ? 'on' : ''}"></span>
+        <div class="grow"><b>${x.name}, ${x.address}</b><small><span class="c-safe">Đang mở cửa</span> · Đóng lúc ${x.close} · Cách ${x.dist}</small></div>
+      </div>`).join('') : '<p class="st-empty">Không tìm thấy siêu thị phù hợp</p>';
+  };
+  screens.stores = () => `
+    <div class="scr scr-st">
+      <div class="appbar bordered"><button class="appbar-l" data-action="back" aria-label="Đóng">${icon('close-line')}</button><h1>Đổi siêu thị</h1></div>
+      <div class="st-search">${icon('search-line', 20, 'c-brand')}<input type="search" data-filter="stores" value="${storeQ}" placeholder="Tìm cửa hàng theo Tên hoặc Quận"></div>
+      <div class="body" id="st-list">${storeRows()}</div>
+    </div>`;
+
+  // 8. Search — design OLA_Revision "search.focus.full"
+  let searchQ = '';
+  const searchBody = () => {
+    const q = searchQ.trim().toLowerCase();
+    if (q) {
+      const hits = D.products.filter((p) => p.name.toLowerCase().includes(q));
+      return hits.length
+        ? `<h2 class="sr-h">Kết quả cho “${searchQ.trim()}”</h2><div class="sr-grid">${hits.map((p) => recCard(p, true)).join('')}</div>`
+        : `<p class="sr-empty">Không tìm thấy sản phẩm cho “${searchQ.trim()}”</p>`;
+    }
+    const sw = D.search;
+    return `
+      <section class="sr-sec"><h2>Tìm kiếm gần đây</h2><div class="sr-chips">${sw.recent.map((t) => `<button data-action="search-chip" data-q="${t}">${t}</button>`).join('')}</div></section>
+      <section class="sr-sec"><h2>Ngành hàng bạn hay mua</h2><div class="cates sr-cates">${D.categories.filter((c) => !c.reorder).map((c) => `
+        <div class="cate" data-action="noop"><img src="${c.img}" width="48" height="48" alt=""><span>${c.label}</span></div>`).join('')}</div></section>
+      <section class="rec sr-rec"><h2>Sản phẩm bạn đã xem</h2><div class="rec-list">${sw.viewedIds.map((id) => recCard(byId[id])).join('')}</div></section>
+      <section class="rec sr-rec"><h2>Deal dành riêng cho bạn</h2><div class="rec-list">${D.dealIds.map((id) => recCard(byId[id])).join('')}</div></section>
+      <section class="sr-sec sr-re"><h2>Đặt lại sản phẩm</h2><div class="sr-grid">${sw.reorderIds.map((id) => recCard(byId[id], true)).join('')}</div></section>`;
+  };
+  screens.search = () => {
+    const n = cartCount();
+    return `
+    <div class="scr scr-sr">
+      <div class="sr-top">
+        <button class="sr-back" data-action="back" aria-label="Quay lại">${icon('arrow-left-s-line')}</button>
+        <label class="sr-input">${icon('search-line', 20, 'c-brand')}<input type="search" data-filter="search" value="${searchQ}" placeholder="${D.search.placeholder}" autocomplete="off"></label>
+        <button class="sr-cart" data-action="go" data-to="#/cart" aria-label="Giỏ hàng">${icon('shopping-cart-2-line', 22)}${n ? `<span class="badge">${n}</span>` : ''}</button>
+      </div>
+      <div class="body" id="sr-body">${searchBody()}</div>
+    </div>`;
+  };
+
   // ---------- coachmarks ----------
   const COACH_DIM = 'rgba(45, 55, 72, 0.6)';
 
   const checkoutSteps = () => [
     { targets: ['#co-s1', '#co-s2', '#co-slots'], title: 'Cách bạn nhận hàng',
-      text: `Đơn này nhận tại siêu thị ${D.store.name}, lúc ${D.pickup.slots[S.slot].replace(' - ', '-')}`,
+      text: isShip()
+        ? `Đơn này giao đến ${D.delivery.address}, lúc ${slotText().replace(' - ', '-')}`
+        : `Đơn này nhận tại siêu thị ${store().name}, lúc ${slotText().replace(' - ', '-')}`,
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
     { targets: ['#co-s4-top'], title: 'Áp dụng khuyến mãi cho đơn',
       text: 'Chọn mã khuyến mãi để giảm giá thêm cho đơn hàng này',
@@ -532,6 +634,7 @@
     const el = app.querySelector('.scr');
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
     if (name === 'home') initReplay(el);
+    if (name === 'search' && !keepScroll) el.querySelector('input').focus();
     if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
       const steps = checkoutSteps();
       showCoach(el, steps[coachStep], coachStep, steps.length);
@@ -553,7 +656,7 @@
     inc: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) + 1; save(); render(true); },
     dec: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) - 1; if (S.cart[d.id] <= 0) delete S.cart[d.id]; save(); render(true); },
     del: (d) => { delete S.cart[d.id]; save(); render(true); },
-    deli: (d) => { S.deli = d.v; save(); render(true); },
+    deli: (d) => { S.deli = d.v; S.day = 0; save(); render(true); },
     slot: (d) => { S.slot = Number(d.i); save(); render(true); },
     day: (d) => { S.day = Number(d.i); save(); render(true); },
     'guide-open': () => { guide = { tab: 0, step: 0 }; render(true); },
@@ -568,6 +671,10 @@
     replay: () => { S.homeTipSeen = false; S.coachDone = false; coachStep = 0; save(); location.hash = '#/welcome'; },
     'coach-out': () => { coachAdvance(); render(true); },
     voucher: (d) => { S.voucher = S.voucher === d.id ? null : d.id; save(); render(true); },
+    'vc-pick': (d) => { vcPick = vcPick === d.id ? null : d.id; render(true); },
+    'vc-apply': () => { S.voucher = vcPick; save(); history.back(); },
+    'store-pick': (d) => { S.storeId = d.id; save(); history.back(); },
+    'search-chip': (d) => { searchQ = d.q; render(true); },
     'coach-skip': () => { S.coachDone = true; save(); render(true); },
     'coach-review': () => { coachStep = 0; render(true); },
     'coach-done': () => { S.coachDone = true; save(); render(true); },
@@ -607,6 +714,22 @@
   app.addEventListener('click', (e) => { if (held) { held = false; e.stopPropagation(); e.preventDefault(); } }, true);
   app.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-hold]')) e.preventDefault(); });
 
-  window.addEventListener('hashchange', () => { if (route().name !== 'checkout') coachStep = 0; guide = null; render(false); });
+  // ô tìm kiếm: chỉ vẽ lại danh sách để không mất focus khi gõ
+  app.addEventListener('input', (e) => {
+    const f = e.target.dataset.filter;
+    if (f === 'stores') { storeQ = e.target.value; app.querySelector('#st-list').innerHTML = storeRows(); }
+    if (f === 'search') { searchQ = e.target.value; app.querySelector('#sr-body').innerHTML = searchBody(); }
+  });
+
+  window.addEventListener('hashchange', () => {
+    const name = route().name;
+    // mở "Ưu đãi của bạn" / "Đổi siêu thị" từ Checkout thì quay lại vẫn giữ bước coachmark
+    if (!['checkout', 'vouchers', 'stores'].includes(name)) coachStep = 0;
+    if (name !== 'vouchers') vcPick = undefined;
+    if (name !== 'stores') storeQ = '';
+    if (name !== 'search' && name !== 'pdp') searchQ = '';
+    guide = null;
+    render(false);
+  });
   render(false);
 })();
