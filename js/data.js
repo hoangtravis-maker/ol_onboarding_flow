@@ -71,7 +71,7 @@ window.DATA = {
   homeDeals: ['chabaa', 'gao', 'cha-ca', 'cha-lua'],
 
   categories: [
-    { label: 'Đặt lại sản phẩm', img: 'assets/img/cate-history.webp', active: true },
+    { label: 'Đặt lại sản phẩm', img: 'assets/img/cate-history.webp', active: true, reorder: true },
     { label: 'Tết tưng bừng', img: 'assets/img/cate-tet.webp' },
     { label: 'Thế giới trái cây', img: 'assets/img/cate-fruit.webp' },
     { label: 'Rau, củ, quả', img: 'assets/img/cate-veg.webp' },

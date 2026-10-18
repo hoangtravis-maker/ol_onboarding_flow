@@ -63,7 +63,7 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 |---|---|---|
 | Mục 2 | "Chọn nơi nhận": siêu thị + **Đổi** | "Chọn địa chỉ giao": người nhận + địa chỉ (**Đổi** chưa có behavior); khung "Siêu thị phục vụ bạn" + **Đổi** |
 | Mục 3 | "Chọn giờ nhận": Ngày mai / Thứ 2… | "Chọn giờ giao": Hôm nay / Ngày mai |
-| Hóa đơn | Không có phí giao | Thêm dòng "Phí giao hàng" |
+| Hóa đơn | Không có phí giao | Thêm dòng "Phí vận chuyển"; nếu áp voucher giảm phí vận chuyển thì "Tổng khuyến mãi" có dòng "Giảm giá phí vận chuyển" |
 
 - **Đổi** siêu thị (cả 2 chế độ): sang Đổi siêu thị.
 - **Chọn khuyến mãi**: hiện 4 voucher đầu (khả dụng lên trước). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn.
@@ -88,7 +88,8 @@ Mở từ **Đổi** ở Thanh toán (cả Giao hàng và Nhận tại siêu th�
 
 ### 8. Search — `#/search`
 Mở từ thanh tìm kiếm ở Home. Theo design OLA_Revision (bản cho user đã đăng nhập).
-- Khi chưa gõ: Tìm kiếm gần đây (chip) → Ngành hàng bạn hay mua → Deal dành riêng cho bạn → Sản phẩm bạn đã xem → Đặt lại sản phẩm.
+- Khi chưa gõ: Tìm kiếm gần đây (chip) → Ngành hàng bạn hay mua → Sản phẩm bạn đã xem → Deal dành riêng cho bạn → Đặt lại sản phẩm.
+- "Đặt lại sản phẩm" và kết quả tìm kiếm dùng product card thường 2 cột; 2 mục trượt ngang dùng card nhỏ.
 - Bấm chip gần đây hoặc gõ từ khoá: hiện kết quả lọc theo tên sản phẩm, hoặc thông báo không tìm thấy.
 - Bấm **Mua** trên mọi card: thêm vào giỏ. Bấm ảnh / tên: sang Chi tiết sản phẩm. Icon giỏ: sang Giỏ hàng.
 

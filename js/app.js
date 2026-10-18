@@ -88,9 +88,10 @@
     </div>`;
 
   // card.product.normal.sm — "Thường được mua kèm"
-  const recCard = (p) => `
-    <div class="rcard">
-      <div class="rcard-img" data-action="pdp" data-id="${p.id}"><img src="${p.img}" width="132" height="132" alt="${p.name}"><span class="rcard-disc">-${p.discount}%</span></div>
+  // grid = card.product.normal 2 cột (Search > Đặt lại sản phẩm, kết quả tìm kiếm)
+  const recCard = (p, grid = false) => `
+    <div class="rcard ${grid ? 'pcard' : ''}">
+      <div class="rcard-img" data-action="pdp" data-id="${p.id}"><img src="${p.img}" width="132" height="132" alt="${p.name}"><span class="rcard-disc">-${p.discount}%</span>${grid ? '<span class="pcard-badge b-blue">Ưu đãi online</span>' : ''}</div>
       <p class="rcard-price">${fmt(p.price)}<small> đ</small></p>
       <p class="rcard-old"><s>${fmt(p.oldPrice)} đ</s> <b class="c-safe2">Tiết kiệm ${fmt((p.oldPrice - p.price) / 1000)}k</b></p>
       <p class="rcard-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
@@ -390,12 +391,12 @@
         <section class="co-sec" id="co-s6">
           ${titleCheckout(6, 'Kiểm tra thông tin hóa đơn')}
           <div class="sum">
-            <div class="sum-row"><span>Tạm tính</span><b>${fmt(sum)} đ</b></div>
-            ${fee ? `<div class="sum-row"><span>Phí giao hàng</span><b>${fmt(fee)} đ</b></div>` : ''}
+            <div class="sum-row"><span>Tổng tạm tính</span><b>${fmt(sum)} đ</b></div>
+            ${isShip() ? `<div class="sum-row"><span>Phí vận chuyển</span><b>${fmt(fee)} đ</b></div>` : ''}
             ${vc ? `
-            <div class="sum-row"><span>Khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
-            <div class="sum-sub"><div class="sum-row"><span>${vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div></div>` : `
-            <div class="sum-row"><span>Khuyến mãi</span><b>0 đ</b></div>`}
+            <div class="sum-row"><span>Tổng khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
+            <div class="sum-sub"><div class="sum-row"><span>${vc.ship ? 'Giảm giá phí vận chuyển' : vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div></div>` : `
+            <div class="sum-row"><span>Tổng khuyến mãi</span><b>0 đ</b></div>`}
             <hr>
             <div class="sum-row sum-total"><span>Tổng cộng</span><b>${fmt(total)} đ</b></div>
           </div>
@@ -487,17 +488,17 @@
     if (q) {
       const hits = D.products.filter((p) => p.name.toLowerCase().includes(q));
       return hits.length
-        ? `<h2 class="sr-h">Kết quả cho “${searchQ.trim()}”</h2><div class="deal-grid deal-grid-home sr-grid">${hits.map((p) => dealCard(p, { tall: false })).join('')}</div>`
+        ? `<h2 class="sr-h">Kết quả cho “${searchQ.trim()}”</h2><div class="sr-grid">${hits.map((p) => recCard(p, true)).join('')}</div>`
         : `<p class="sr-empty">Không tìm thấy sản phẩm cho “${searchQ.trim()}”</p>`;
     }
     const sw = D.search;
     return `
       <section class="sr-sec"><h2>Tìm kiếm gần đây</h2><div class="sr-chips">${sw.recent.map((t) => `<button data-action="search-chip" data-q="${t}">${t}</button>`).join('')}</div></section>
-      <section class="sr-sec"><h2>Ngành hàng bạn hay mua</h2><div class="cates sr-cates">${D.categories.map((c) => `
+      <section class="sr-sec"><h2>Ngành hàng bạn hay mua</h2><div class="cates sr-cates">${D.categories.filter((c) => !c.reorder).map((c) => `
         <div class="cate" data-action="noop"><img src="${c.img}" width="48" height="48" alt=""><span>${c.label}</span></div>`).join('')}</div></section>
-      <section class="rec sr-rec"><h2>Deal dành riêng cho bạn</h2><div class="rec-list">${D.dealIds.map((id) => recCard(byId[id])).join('')}</div></section>
       <section class="rec sr-rec"><h2>Sản phẩm bạn đã xem</h2><div class="rec-list">${sw.viewedIds.map((id) => recCard(byId[id])).join('')}</div></section>
-      <section class="sr-sec sr-re"><h2>Đặt lại sản phẩm</h2><div class="deal-grid deal-grid-home sr-grid">${sw.reorderIds.map((id) => dealCard(byId[id], { tall: false })).join('')}</div></section>`;
+      <section class="rec sr-rec"><h2>Deal dành riêng cho bạn</h2><div class="rec-list">${D.dealIds.map((id) => recCard(byId[id])).join('')}</div></section>
+      <section class="sr-sec sr-re"><h2>Đặt lại sản phẩm</h2><div class="sr-grid">${sw.reorderIds.map((id) => recCard(byId[id], true)).join('')}</div></section>`;
   };
   screens.search = () => {
     const n = cartCount();

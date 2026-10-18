@@ -523,11 +523,11 @@ textarea { font: inherit; }
 .st-empty, .sr-empty { padding: 32px 16px; text-align: center; color: var(--tertiary); font-size: 14px; }
 
 /* ---------- Search ---------- */
-.sr-top { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 4px 8px; }
+.sr-top { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 10px 12px 6px 8px; }
 .sr-back { display: flex; padding: 4px; }
 .sr-input { flex: 1; min-width: 0; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--brand); border-radius: 24px; }
-.sr-cart { position: relative; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(23, 25, 35, 0.12); }
-.sr-cart .badge { top: -4px; right: -4px; }
+.sr-cart { position: relative; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(23, 25, 35, 0.12); }
+.sr-cart .badge { top: -3px; right: -3px; }
 .scr-sr .body { padding-bottom: 24px; }
 .sr-sec { padding: 8px 0; border-bottom: 1px solid var(--divider); }
 .sr-sec h2, .sr-h { padding: 0 8px 8px; font-size: 14px; line-height: 20px; font-weight: 600; }
@@ -538,4 +538,11 @@ textarea { font: inherit; }
 .sr-cates::-webkit-scrollbar { display: none; }
 .sr-rec { border-bottom: 1px solid var(--divider); }
 .sr-re { border-bottom: 0; }
-.sr-grid { row-gap: 16px; padding-bottom: 8px; }
+.sr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 8px; padding: 0 8px 8px; }
+.pcard { width: auto; }
+.pcard .rcard-img { width: 100%; height: auto; aspect-ratio: 1; }
+.pcard .rcard-disc { left: auto; right: 0; border-radius: 0 0 0 8px; }
+.pcard-badge { position: absolute; left: 4px; bottom: 4px; padding: 2px 6px; border-radius: 4px; font-size: 12px; line-height: 16px; font-weight: 600; }
+.pcard .rcard-price { font-size: 16px; line-height: 24px; }
+.pcard .rcard-old { font-size: 12px; line-height: 16px; }
+.pcard .rcard-name { height: 40px; font-size: 14px; line-height: 20px; }
