@@ -75,10 +75,6 @@ window.DATA = {
     { id: 'ship', kind: 'ship', imgTitle: 'MIỄN PHÍ VẬN CHUYỂN', imgSub: 'Đơn từ 500k', title: 'Giảm 20.000 đ phí vận chuyển', cond: 'Đơn bất kỳ', expiry: 'Hạn dùng: 31/10/2026', pickupNA: true },
   ],
 
-  // Khuyến mãi áp dụng trong "Kiểm tra thông tin hóa đơn"
-  orderDiscounts: [
-    { label: 'OneLife Club · Phiếu giảm giá 25k', amount: 25000, club: true },
-  ],
 
   // guide: true → hiện mô tả + link "Xem hướng dẫn" mở bottom sheet hướng dẫn chuyển khoản
   payments: [

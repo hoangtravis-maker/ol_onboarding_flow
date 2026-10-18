@@ -456,7 +456,6 @@ textarea { font: inherit; }
 .sum-row b { font-weight: 400; color: var(--secondary); white-space: nowrap; }
 .sum-sub { padding-left: 16px; display: flex; flex-direction: column; gap: 8px; }
 .sum-sub b.c-safe { color: var(--safe); }
-.club { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(#0d3862, #1b72c8); flex-shrink: 0; }
 .sum hr { border: 0; border-top: 1px solid var(--divider); }
 .sum-total span { color: var(--primary); font-weight: 600; }
 .sum-total b { font-weight: 600; }

@@ -31,7 +31,6 @@
   const listTotal = () => cartItems().reduce((s, i) => s + i.p.oldPrice * i.q, 0);
   // "Xem lại hướng dẫn": khách mới / churn online, trong N phút sau khi tích điểm ở POS
   const replayLeft = () => (['new', 'churned'].includes(D.user.segment) ? S.posAt + D.replayMinutes * 60000 - Date.now() : 0);
-  const orderDiscount = () => D.orderDiscounts.reduce((s, d) => s + d.amount, 0);
   const vById = Object.fromEntries(D.vouchers.map((v) => [v.id, v]));
   // lý do voucher chưa dùng được (null = dùng được)
   const voucherBlock = (v, sum) => {
@@ -286,7 +285,7 @@
     const sum = subtotal();
     const vc = appliedVoucher(sum);
     const vcAmt = vc ? voucherAmount(vc, sum) : 0;
-    const disc = Math.min(orderDiscount() + vcAmt, sum);
+    const disc = Math.min(vcAmt, sum);
     const total = sum - disc;
     const saving = listTotal() - sum + disc;
     const points = Math.round(total / 1000);
@@ -370,11 +369,10 @@
           ${titleCheckout(6, 'Kiểm tra thông tin hóa đơn')}
           <div class="sum">
             <div class="sum-row"><span>Tạm tính</span><b>${fmt(sum)} đ</b></div>
+            ${vc ? `
             <div class="sum-row"><span>Khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
-            <div class="sum-sub">${D.orderDiscounts.map((d) => `
-              <div class="sum-row"><span>${d.club ? '<i class="club"></i>' : ''}${d.label}</span><b class="c-safe">-${fmt(d.amount)} đ</b></div>`).join('')}
-              ${vc ? `<div class="sum-row"><span>Voucher · ${vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div>` : ''}
-            </div>
+            <div class="sum-sub"><div class="sum-row"><span>${vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div></div>` : `
+            <div class="sum-row"><span>Khuyến mãi</span><b>0 đ</b></div>`}
             <hr>
             <div class="sum-row sum-total"><span>Tổng cộng</span><b>${fmt(total)} đ</b></div>
           </div>
