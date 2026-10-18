@@ -12,14 +12,16 @@
 
   // ---------- state (giữ trong sessionStorage để F5 không mất giỏ) ----------
   const KEY = 'ol-proto-v1';
-  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: 'olcard', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false });
+  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: 'olcard', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false, posAt: Date.now() });
   let S;
   try { S = JSON.parse(sessionStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); }
+  if (!S.posAt) S.posAt = Date.now();
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
   // trạng thái tạm thời theo màn (không lưu)
   let tipFor = null;      // 'home' | 'pdp' — tooltip "Đã thêm, bấm giỏ hàng để đặt"
   let coachStep = 0;      // bước coachmark ở checkout
+  let toast = null;       // thông báo ngắn hiện 1 lần sau lần render kế tiếp
   let guide = null;       // { tab, step } khi đang mở hướng dẫn chuyển khoản
 
   const cartItems = () => Object.entries(S.cart).filter(([, q]) => q > 0).map(([id, q]) => ({ p: byId[id], q }));
@@ -27,7 +29,22 @@
   const cartLines = () => cartItems().length;
   const subtotal = () => cartItems().reduce((s, i) => s + i.p.price * i.q, 0);
   const listTotal = () => cartItems().reduce((s, i) => s + i.p.oldPrice * i.q, 0);
+  // "Xem lại hướng dẫn": khách mới / churn online, trong N phút sau khi tích điểm ở POS
+  const replayLeft = () => (['new', 'churned'].includes(D.user.segment) ? S.posAt + D.replayMinutes * 60000 - Date.now() : 0);
   const orderDiscount = () => D.orderDiscounts.reduce((s, d) => s + d.amount, 0);
+  const vById = Object.fromEntries(D.vouchers.map((v) => [v.id, v]));
+  // lý do voucher chưa dùng được (null = dùng được)
+  const voucherBlock = (v, sum) => {
+    if (v.pickupNA) return 'Không áp dụng cho đơn nhận tại siêu thị';
+    if (sum < v.min) return `Mua thêm ${fmt(v.min - sum)} đ để dùng`;
+    return null;
+  };
+  const voucherAmount = (v, sum) => (v.pct ? Math.min(Math.round(sum * v.pct / 100 / 1000) * 1000, v.max) : v.off);
+  // voucher đang áp dụng; tự gỡ nếu đơn không còn đủ điều kiện
+  const appliedVoucher = (sum) => {
+    const v = vById[S.voucher];
+    return v && !voucherBlock(v, sum) ? v : null;
+  };
 
   // ---------- shared components ----------
   const qtyStepper = (p, cls = '') => `
@@ -43,8 +60,11 @@
       <span class="disc-n">${pct}<small>%</small></span>
     </div>`;
 
-  const dealCard = (p, { tall = true } = {}) => `
-    <div class="deal ${tall ? '' : 'deal-home'}">
+  const TAP_HAND = '<svg class="tap-hand" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M10 3.5a1.5 1.5 0 0 1 3 0V10h.4a1.5 1.5 0 0 1 1.5 1.3 1.5 1.5 0 0 1 2.6.9 1.5 1.5 0 0 1 2.5 1.1V17a5 5 0 0 1-5 5h-2.3a5 5 0 0 1-3.9-1.9l-3.4-4.5a1.5 1.5 0 0 1 2.3-1.9l1.3 1.5Z"/></svg>';
+
+  // hint: ngón tay chỉ vào nút "Mua" (Welcome, khi giỏ còn trống)
+  const dealCard = (p, { tall = true, hint = false } = {}) => `
+    <div class="deal ${tall ? '' : 'deal-home'} ${hint ? 'hint' : ''}">
       <div class="deal-tile" data-action="pdp" data-id="${p.id}">
         <img class="deal-img" src="${p.img}" width="151" height="151" alt="${p.name}">
         ${discountLabel(p.discount)}
@@ -55,6 +75,7 @@
         ${S.cart[p.id] ? qtyStepper(p, 'deal-qty') : `<button class="btn-buy" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
       </div>
       <p class="deal-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
+      ${hint ? TAP_HAND : ''}
     </div>`;
 
   // card.product.normal.sm — "Thường được mua kèm"
@@ -84,7 +105,7 @@
       <div class="body">
         <div class="wl-banner">Bạn đã tích điểm thành công</div>
         <img class="wl-headline ${n ? 'is-a2c' : ''}" src="assets/img/headline.webp" width="245" height="76" alt="Deal online dành riêng cho bạn — Chỉ trong 24h">
-        <div class="deal-grid">${D.dealIds.map((id) => dealCard(byId[id])).join('')}</div>
+        <div class="deal-grid">${D.dealIds.map((id, i) => dealCard(byId[id], { hint: !n && i === 0 })).join('')}</div>
       </div>
       ${n ? `
       <div class="foot wl-foot">
@@ -101,7 +122,7 @@
     return `
     <div class="scr scr-home">
       <div class="home-hd">
-        <button class="hd-circle" data-action="noop" aria-label="Menu">${icon('menu-line', 20)}</button>
+        <button class="hd-circle" data-action="noop" data-hold="reset" aria-label="Menu">${icon('menu-line', 20)}</button>
         <div class="hd-search" data-action="noop"><span>Meatcool giảm giá 30%</span>${icon('search-line', 20, 'c-brand')}</div>
         <button class="hd-btn" data-action="noop" aria-label="Voucher"><img src="assets/img/hdr-coupon.webp" width="19" height="19" alt=""><span class="badge">${u.voucherCount}</span></button>
         <button class="hd-glass" data-action="noop" aria-label="Thông báo">${icon('notification-3-line', 20)}<i class="dot"></i></button>
@@ -150,9 +171,10 @@
           <a class="tab" data-action="noop">${icon('price-tag-3-line', 24)}<span>Khuyến mãi</span></a>
           <a class="tab-qr" data-action="noop"><img src="assets/img/tab-qr.webp" width="52" height="52" alt="Quét mã"></a>
           <a class="tab dim" data-action="go" data-to="#/cart"><i class="tab-cart">${icon('shopping-cart-2-line', 24)}${n ? `<span class="badge badge-dk">${n}</span>` : ''}</i><span>Giỏ hàng</span></a>
-          <a class="tab dim" data-action="noop"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
+          <a class="tab dim" data-action="noop" data-hold="reset"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
         </nav>
       </div>
+      ${replayLeft() > 0 ? `<a class="replay" data-action="replay">${icon('restart-line', 18)}<span>Xem lại hướng dẫn</span></a>` : ''}
       ${tipFor === 'home' && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart') : ''}
     </div>`;
   };
@@ -241,14 +263,14 @@
           <div class="rec-list">${D.recommendIds.map((id) => recCard(byId[id])).join('')}</div>
         </div>
       </div>
-      <div class="foot cart-foot">
-        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng 0 Voucher</small>${icon('arrow-right-s-line', 16)}</div>
+      <div class="foot cart-foot ${n ? 'hint' : ''}">
+        ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
+        <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng ${appliedVoucher(sum) ? 1 : 0} Voucher</small>${icon('arrow-right-s-line', 16)}</div>
         <div class="btn-group">
           <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
           <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Mua hàng</b><span> · ${n} món</span></button>
         </div>
       </div>
-      ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
     </div>`;
   };
 
@@ -262,7 +284,9 @@
   screens.checkout = () => {
     const items = cartItems();
     const sum = subtotal();
-    const disc = Math.min(orderDiscount(), sum);
+    const vc = appliedVoucher(sum);
+    const vcAmt = vc ? voucherAmount(vc, sum) : 0;
+    const disc = Math.min(orderDiscount() + vcAmt, sum);
     const total = sum - disc;
     const saving = listTotal() - sum + disc;
     const points = Math.round(total / 1000);
@@ -307,13 +331,17 @@
           <div id="co-s4-top">
             ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="noop">Xem tất cả</a>')}
             <div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div>
-            <div class="vc-list">${D.vouchers.map((v) => `
-              <div class="vc ${v.applied ? 'applied' : ''}">
+            <div class="vc-list">${D.vouchers.map((v) => {
+              const block = voucherBlock(v, sum);
+              const on = vc === v;
+              return `
+              <div class="vc ${on ? 'applied' : ''} ${block ? 'vc-na' : ''}">
                 ${voucherImg(v)}
-                <div class="vc-txt"><p class="vc-mer"><i></i>ONELIFE</p><p class="vc-title">${v.title}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
-                <a class="vc-act" data-action="noop">${v.applied ? 'Gỡ' : 'Dùng'}</a>
+                <div class="vc-txt"><p class="vc-mer"><i></i>ONELIFE</p><p class="vc-title">${v.title}</p><p class="vc-cond ${block ? 'c-danger' : ''}">${block || v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
+                ${block ? '' : `<a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>`}
                 ${v.qty ? `<span class="vc-qty">x${v.qty}</span>` : ''}
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
             </div>
           </div>
           <div class="co-usepts">
@@ -345,6 +373,7 @@
             <div class="sum-row"><span>Khuyến mãi ${icon('arrow-up-s-line', 16)}</span></div>
             <div class="sum-sub">${D.orderDiscounts.map((d) => `
               <div class="sum-row"><span>${d.club ? '<i class="club"></i>' : ''}${d.label}</span><b class="c-safe">-${fmt(d.amount)} đ</b></div>`).join('')}
+              ${vc ? `<div class="sum-row"><span>Voucher · ${vc.title}</span><b class="c-safe">-${fmt(vcAmt)} đ</b></div>` : ''}
             </div>
             <hr>
             <div class="sum-row sum-total"><span>Tổng cộng</span><b>${fmt(total)} đ</b></div>
@@ -421,9 +450,14 @@
     const r = unionRect(scr, step.targets);
     const pad = 4;
     const layer = document.createElement('div');
-    layer.className = 'coach';
+    layer.className = 'coach coach-step';
+    const top = r.top + (step.above ? 0 : 6), left = r.left + pad, right = r.right - pad;
+    // 4 tấm chắn trong suốt quanh vùng sáng: bấm ra ngoài = "Tiếp tục"; bấm trong vùng sáng thì thao tác thật (xem click handler)
+    const blk = (st) => `<div class="coach-blk" data-action="coach-out" style="${st}"></div>`;
     layer.innerHTML = `
-      <div class="coach-spot" style="top:${r.top + (step.above ? 0 : 6)}px;left:${r.left + pad}px;width:${r.right - r.left - pad * 2}px;height:${r.bottom - r.top - (step.above ? 0 : 6)}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      ${blk(`top:0;left:0;right:0;height:${top}px`)}${blk(`top:${r.bottom}px;left:0;right:0;bottom:0`)}
+      ${blk(`top:${top}px;left:0;width:${left}px;height:${r.bottom - top}px`)}${blk(`top:${top}px;left:${right}px;right:0;height:${r.bottom - top}px`)}
+      <div class="coach-spot" style="top:${top}px;left:${left}px;width:${right - left}px;height:${r.bottom - top}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
       <div class="coach-tt ${step.above ? 'tip-br' : 'tip-tl'}">
         <p class="ct-title">${step.title}</p>
         <p class="ct-text">${step.text}</p>
@@ -459,6 +493,21 @@
     tt.style.top = `${r.top - 4 - tt.offsetHeight}px`;
   }
 
+  // nút "Xem lại hướng dẫn": thu nhỏ khi đang cuộn, nở lại khi dừng; tự ẩn khi hết thời gian
+  let replayTimer = null;
+  function initReplay(scr) {
+    clearTimeout(replayTimer);
+    const btn = scr.querySelector('.replay');
+    if (!btn) return;
+    replayTimer = setTimeout(() => { if (route().name === 'home') render(true); }, replayLeft() + 50);
+    let idle = null;
+    scr.querySelector('.body').addEventListener('scroll', (e) => {
+      btn.classList.toggle('mini', e.target.scrollTop > 0);
+      clearTimeout(idle);
+      idle = setTimeout(() => btn.classList.remove('mini'), 700);
+    }, { passive: true });
+  }
+
   // ---------- router ----------
   function route() {
     const h = location.hash.replace(/^#\/?/, '') || 'welcome';
@@ -479,15 +528,22 @@
     const body = app.querySelector('.body');
     if (body) body.scrollTop = scrollTop;
     lastRoute = key;
+    if (toast) { app.insertAdjacentHTML('beforeend', `<div class="toast">${toast}</div>`); toast = null; }
     const el = app.querySelector('.scr');
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
-    if (name === 'checkout' && !S.coachDone && cartLines()) {
+    if (name === 'home') initReplay(el);
+    if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
       const steps = checkoutSteps();
       showCoach(el, steps[coachStep], coachStep, steps.length);
     }
   }
 
   // ---------- actions ----------
+  // coachmark checkout: thao tác của khách trong lúc xem hướng dẫn được tính như bấm "Tiếp tục"
+  const coachAdvance = () => {
+    if (coachStep + 1 >= checkoutSteps().length) { S.coachDone = true; save(); } else coachStep += 1;
+  };
+
   const actions = {
     go: (d) => { location.hash = d.to; },
     back: () => { if (history.length > 1) history.back(); else location.hash = '#/home'; },
@@ -508,6 +564,10 @@
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
     'coach-next': () => { coachStep += 1; render(true); },
+    // xem lại onboarding từ đầu, giữ nguyên giỏ hàng
+    replay: () => { S.homeTipSeen = false; S.coachDone = false; coachStep = 0; save(); location.hash = '#/welcome'; },
+    'coach-out': () => { coachAdvance(); render(true); },
+    voucher: (d) => { S.voucher = S.voucher === d.id ? null : d.id; save(); render(true); },
     'coach-skip': () => { S.coachDone = true; save(); render(true); },
     'coach-review': () => { coachStep = 0; render(true); },
     'coach-done': () => { S.coachDone = true; save(); render(true); },
@@ -515,12 +575,37 @@
 
   app.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action]');
+    // bấm xuyên qua vùng sáng của coachmark: sang bước sau rồi thực hiện thao tác thật
+    if (app.querySelector('.coach-step') && !e.target.closest('.coach')) {
+      coachAdvance();
+      if (!el || !app.contains(el) || !actions[el.dataset.action] || el.dataset.action === 'noop') { render(true); return; }
+    }
     if (!el || !app.contains(el)) return;
     // nút bên trong thẻ sản phẩm không mở PDP
     e.stopPropagation();
     const fn = actions[el.dataset.action];
     if (fn) fn(el.dataset);
   });
+
+  // Reset cho khách mới: ấn giữ 3s vào nút menu (góc trái header Home) hoặc avatar ở tab bar
+  const HOLD_MS = 3000;
+  let holdTimer = null, held = false;
+  const holdEnd = () => { clearTimeout(holdTimer); holdTimer = null; };
+  app.addEventListener('pointerdown', (e) => {
+    held = false;
+    if (!e.target.closest('[data-hold="reset"]')) return;
+    holdEnd();
+    holdTimer = setTimeout(() => {
+      holdTimer = null; held = true;
+      S = fresh(); save(); coachStep = 0; guide = null; tipFor = null;
+      toast = 'Đã làm mới, sẵn sàng cho khách mới';
+      if (route().name === 'welcome') render(false); else location.hash = '#/welcome';
+    }, HOLD_MS);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => app.addEventListener(t, holdEnd, true));
+  // chặn click phát sinh ngay sau khi giữ, và menu ngữ cảnh khi giữ lâu trên mobile
+  app.addEventListener('click', (e) => { if (held) { held = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  app.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-hold]')) e.preventDefault(); });
 
   window.addEventListener('hashchange', () => { if (route().name !== 'checkout') coachStep = 0; guide = null; render(false); });
   render(false);
