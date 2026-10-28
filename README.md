@@ -72,7 +72,7 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 - **Chọn khuyến mãi**: chỉ hiện voucher dùng được cho đơn hiện tại (tối đa 4). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn (có cả voucher không khả dụng).
 - Mỗi đơn dùng 1 voucher. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
 - Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng).
-- **Coachmark 4 bước** (lần đầu vào): Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra phương thức thanh toán → Đặt đơn là xong.
+- **Coachmark 4 bước** (lần đầu vào): Cách bạn nhận hàng → Bấm Dùng để áp dụng mã khuyến mãi → Kiểm tra phương thức thanh toán → Đặt đơn là xong.
   - Nút: Bỏ qua / Tiếp tục / Xem lại / Đã hiểu.
   - Bấm ra vùng tối = Tiếp tục (bước cuối = Đã hiểu).
   - Bấm thao tác trong vùng sáng (chọn ngày/slot, Đổi siêu thị, Dùng voucher, Xem tất cả, chọn thanh toán, Xem hướng dẫn) thì thao tác có tác dụng nhưng **vẫn ở bước đó**. Riêng **Đặt đơn** ở bước cuối thì kết thúc hướng dẫn. Mở Đổi siêu thị / Ưu đãi của bạn rồi quay lại vẫn giữ bước coachmark.

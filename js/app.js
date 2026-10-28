@@ -527,8 +527,8 @@
         ? `Đơn này giao đến ${D.delivery.address}, lúc ${slotText().replace(' - ', '-')}`
         : `Đơn này nhận tại siêu thị ${store().name}, lúc ${slotText().replace(' - ', '-')}`,
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
-    { targets: ['#co-s4-top'], title: 'Áp dụng khuyến mãi cho đơn',
-      text: 'Chọn mã khuyến mãi để giảm giá thêm cho đơn hàng này',
+    { targets: ['#co-s4-top'], title: 'Bấm Dùng để áp dụng mã khuyến mãi',
+      text: '',
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
     { targets: ['#co-s5'], title: 'Kiểm tra phương thức thanh toán',
       text: '',
