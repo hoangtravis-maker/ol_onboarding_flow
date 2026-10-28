@@ -19,7 +19,6 @@
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
   // trạng thái tạm thời theo màn (không lưu)
-  let tipFor = null;      // 'home' | 'pdp' — tooltip "Đã thêm, bấm giỏ hàng để đặt"
   let coachStep = 0;      // bước coachmark ở checkout
   let toast = null;       // thông báo ngắn hiện 1 lần sau lần render kế tiếp
   let guide = null;       // { tab, step } khi đang mở hướng dẫn chuyển khoản
@@ -67,11 +66,14 @@
       <span class="disc-n">${pct}<small>%</small></span>
     </div>`;
 
-  const TAP_HAND = '<svg class="tap-hand" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M10 3.5a1.5 1.5 0 0 1 3 0V10h.4a1.5 1.5 0 0 1 1.5 1.3 1.5 1.5 0 0 1 2.6.9 1.5 1.5 0 0 1 2.5 1.1V17a5 5 0 0 1-5 5h-2.3a5 5 0 0 1-3.9-1.9l-3.4-4.5a1.5 1.5 0 0 1 2.3-1.9l1.3 1.5Z"/></svg>';
+  // icon giỏ có dấu "+" (xuất từ Figma, tách 2 lớp để chạy motion)
+  const BUY_ICON = (size = 16) => `<svg class="buy-ic" width="${size}" height="${size}" viewBox="0 0 16 16" aria-hidden="true">
+    <path class="bi-cart" transform="translate(1 1)" fill="currentColor" d="M3.16309 12.166C3.42832 12.166 3.68254 12.2715 3.87012 12.459C4.05765 12.6465 4.16301 12.9008 4.16309 13.166C4.16309 13.4313 4.05771 13.6864 3.87012 13.874C3.68256 14.0614 3.42822 14.167 3.16309 14.167C2.89796 14.167 2.64362 14.0614 2.45605 13.874C2.26846 13.6864 2.16309 13.4313 2.16309 13.166C2.16316 12.9008 2.26852 12.6465 2.45605 12.459C2.64364 12.2715 2.89786 12.166 3.16309 12.166ZM11.166 12.166C11.4312 12.1661 11.6855 12.2715 11.873 12.459C12.0605 12.6465 12.1659 12.9008 12.166 13.166C12.166 13.4313 12.0606 13.6864 11.873 13.874C11.6856 14.0614 11.4311 14.1669 11.166 14.167C10.9007 14.167 10.6456 14.0616 10.458 13.874C10.2704 13.6864 10.165 13.4313 10.165 13.166C10.1651 12.9009 10.2706 12.6465 10.458 12.459C10.6456 12.2714 10.9007 12.166 11.166 12.166ZM3.10547 2.16309H3.11523L3.50586 3.49609H3.49609V7.49805H11.1738L12.374 3.49609H12.3701L12.8145 2.16309H13.2705C13.3743 2.16311 13.4766 2.18689 13.5693 2.2334C13.6622 2.28005 13.7436 2.34826 13.8057 2.43164C13.8676 2.51493 13.9087 2.61166 13.9268 2.71387C13.9448 2.81609 13.9389 2.92106 13.9092 3.02051L12.3086 8.35645C12.2674 8.49355 12.1831 8.61366 12.0684 8.69922C11.9533 8.78485 11.8133 8.83104 11.6699 8.83105H3.49609V10.165H10.832V11.499H2.8291C2.65249 11.4989 2.48333 11.4286 2.3584 11.3037C2.23333 11.1786 2.16309 11.0089 2.16309 10.832V3.10547L0 0.943359L0.943359 0L3.10547 2.16309Z"/>
+    <path class="bi-add" transform="translate(7.4 1.2)" fill="currentColor" d="M1.6875 1.68758V0H2.77232V1.68758H4.5V2.7724H2.77232V4.50008H1.6875V2.7724H0V1.68758H1.6875Z"/></svg>`;
 
-  // hint: ngón tay chỉ vào nút "Mua" (Welcome, khi giỏ còn trống)
-  const dealCard = (p, { tall = true, hint = false } = {}) => `
-    <div class="deal ${tall ? '' : 'deal-home'} ${hint ? 'hint' : ''}">
+  // motion: chỉ chạy ở sản phẩm đầu tiên (Welcome + Home) theo design
+  const dealCard = (p, { tall = true, motion = false } = {}) => `
+    <div class="deal ${tall ? '' : 'deal-home'}">
       <div class="deal-tile" data-action="pdp" data-id="${p.id}">
         <img class="deal-img" src="${p.img}" width="151" height="151" alt="${p.name}">
         ${discountLabel(p.discount)}
@@ -79,10 +81,9 @@
           <div class="dp-now">${fmt(p.price)}<sup>đ</sup></div>
           <div class="dp-old">${fmt(p.oldPrice)} đ</div>
         </div>
-        ${S.cart[p.id] ? qtyStepper(p, 'deal-qty') : `<button class="btn-buy" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
+        ${S.cart[p.id] ? qtyStepper(p, 'deal-qty') : `<button class="btn-buy ${motion ? 'anim-buy' : ''}" data-action="add" data-id="${p.id}">${BUY_ICON()}Mua</button>`}
       </div>
       <p class="deal-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
-      ${hint ? TAP_HAND : ''}
     </div>`;
 
   // card.product.normal.sm — "Thường được mua kèm"
@@ -93,10 +94,11 @@
       <p class="rcard-price">${fmt(p.price)}<small> đ</small></p>
       <p class="rcard-old"><s>${fmt(p.oldPrice)} đ</s> <b class="c-safe2">Tiết kiệm ${fmt((p.oldPrice - p.price) / 1000)}k</b></p>
       <p class="rcard-name" data-action="pdp" data-id="${p.id}">${p.name}</p>
-      ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="rcard-buy" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
+      ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="rcard-buy" data-action="add" data-id="${p.id}">${BUY_ICON()}Mua</button>`}
     </div>`;
 
-  const tooltip = (text, cls) => `<div class="tt ${cls}">${text}</div>`;
+  // to: bấm vào tooltip thì chuyển màn
+  const tooltip = (text, cls, to) => `<div class="tt ${cls} ${to ? 'tt-tap' : ''}" ${to ? `data-action="go" data-to="${to}"` : ''}>${text}</div>`;
 
   const titleCheckout = (idx, label, right = '') => `
     <div class="co-title"><span class="co-idx">${idx}</span><span class="co-label">${label}</span>${right}</div>`;
@@ -113,12 +115,12 @@
       <div class="body">
         <div class="wl-banner">Bạn đã tích điểm thành công</div>
         <img class="wl-headline ${n ? 'is-a2c' : ''}" src="assets/img/headline.webp" width="245" height="76" alt="Deal online dành riêng cho bạn — Chỉ trong 24h">
-        <div class="deal-grid">${D.dealIds.map((id, i) => dealCard(byId[id], { hint: !n && i === 0 })).join('')}</div>
+        <div class="deal-grid">${D.dealIds.map((id, i) => dealCard(byId[id], { motion: i === 0 })).join('')}</div>
       </div>
       ${n ? `
       <div class="foot wl-foot">
         <div class="wl-note">${icon('walk-line', 20, 'c-brand')}<p><b>Đặt deal online, nhận ngay tại siêu thị</b>, <b class="c-safe">không tốn phí giao hàng</b></p></div>
-        <button class="btn-l" data-action="go" data-to="#/cart">${icon('shopping-cart-2-line')}Tiếp tục đặt hàng · ${n} món</button>
+        <button class="btn-l anim-cart" data-action="go" data-to="#/cart">${BUY_ICON(20)}Tiếp tục đặt hàng · ${n} món</button>
       </div>` : ''}
     </div>`;
   };
@@ -170,7 +172,7 @@
         <div class="deal-tabs" id="deal-tabs">${D.dealTabs.map((t, i) => `<div class="dtab dtab-${i}" data-action="noop"><span>${t}</span></div>`).join('')}</div>
         <div class="deal-grid deal-grid-home">
           <div class="deal deal-home"><img class="beef" src="assets/img/beef-banner.webp" width="174" height="223" alt="Thịt bò mát nhập khẩu chuẩn Úc" data-action="noop"></div>
-          ${D.homeDeals.map((id) => dealCard(byId[id], { tall: false })).join('')}
+          ${D.homeDeals.map((id, i) => dealCard(byId[id], { tall: false, motion: i === 0 })).join('')}
         </div>
       </div>
       <div class="tabbar-wrap">
@@ -183,7 +185,7 @@
         </nav>
       </div>
       ${replayLeft() > 0 ? `<a class="replay" data-action="replay">${icon('restart-line', 18)}<span>Xem lại hướng dẫn</span></a>` : ''}
-      ${tipFor === 'home' && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart') : ''}
+      ${S.cartTip && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart', '#/cart') : ''}
     </div>`;
   };
 
@@ -227,9 +229,9 @@
         </div>
       </div>
       <div class="foot pdp-foot">
-        ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="btn-l" data-action="add" data-id="${p.id}">${icon('shopping-cart-2-line', 16)}Mua</button>`}
+        ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="btn-l" data-action="add" data-id="${p.id}">${BUY_ICON()}Mua</button>`}
       </div>
-      ${tipFor === 'pdp' && S.cart[p.id] ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-up tt-pdp-cart') : ''}
+      ${S.cartTip && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-up tt-pdp-cart', '#/cart') : ''}
     </div>`;
   };
 
@@ -271,12 +273,12 @@
           <div class="rec-list">${D.recommendIds.map((id) => recCard(byId[id])).join('')}</div>
         </div>
       </div>
-      <div class="foot cart-foot ${n ? 'hint' : ''}">
-        ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart') : ''}
+      <div class="foot cart-foot">
+        ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart', '#/checkout') : ''}
         <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng ${appliedVoucher(sum) ? 1 : 0} Voucher</small>${icon('arrow-right-s-line', 16)}</div>
         <div class="btn-group">
           <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
-          <button class="bg-btn" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout"><b>Mua hàng</b><span> · ${n} món</span></button>
+          <button class="bg-btn ${n ? 'anim-cart' : ''}" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout">${BUY_ICON(20)}<b>Mua hàng</b><span> · ${n} món</span></button>
         </div>
       </div>
     </div>`;
@@ -525,8 +527,8 @@
     { targets: ['#co-s4-top'], title: 'Áp dụng khuyến mãi cho đơn',
       text: 'Chọn mã khuyến mãi để giảm giá thêm cho đơn hàng này',
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
-    { targets: ['#co-s5'], title: 'Kiểm tra cách thanh toán',
-      text: 'Chọn cách bạn muốn trả tiền cho đơn này',
+    { targets: ['#co-s5'], title: 'Kiểm tra phương thức thanh toán',
+      text: '',
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
     { targets: ['#co-order-btn'], title: 'Đặt đơn là xong', above: true, noScroll: true,
       text: 'Ghé siêu thị để lấy đơn hàng đã chọn',
@@ -549,8 +551,15 @@
       body.scrollTop += first.getBoundingClientRect().top - body.getBoundingClientRect().top - 6;
     }
     body.style.overflow = 'hidden';
-    const r = unionRect(scr, step.targets);
+    let r = unionRect(scr, step.targets);
     const pad = 4;
+    const foot = scr.querySelector('.foot');
+    const footH = foot && !step.above ? foot.offsetHeight : 0;
+    const TT_H = step.text ? 132 : 108;   // chiều cao ước lượng của tooltip
+    const lack = r.bottom + 8 + TT_H - (r.scrH - footH - 8);
+    if (!step.above && lack > 0) { body.scrollTop += lack; r = unionRect(scr, step.targets); }
+    // phần vùng sáng bị cuộn lên dưới thanh tiêu đề thì cắt bớt
+    r.top = Math.max(r.top, body.getBoundingClientRect().top - scr.getBoundingClientRect().top - 6);
     const layer = document.createElement('div');
     layer.className = 'coach coach-step';
     const top = r.top + (step.above ? 0 : 6), left = r.left + pad, right = r.right - pad;
@@ -562,7 +571,7 @@
       <div class="coach-spot" style="top:${top}px;left:${left}px;width:${right - left}px;height:${r.bottom - top}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
       <div class="coach-tt ${step.above ? 'tip-br' : 'tip-tl'}">
         <p class="ct-title">${step.title}</p>
-        <p class="ct-text">${step.text}</p>
+        ${step.text ? `<p class="ct-text">${step.text}</p>` : ''}
         <div class="ct-foot">
           <span class="ct-dots">${Array.from({ length: total }, (_, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('')}</span>
           <span class="grow"></span>
@@ -571,8 +580,7 @@
       </div>`;
     scr.appendChild(layer);
     const tt = layer.querySelector('.coach-tt');
-    const foot = scr.querySelector('.foot');
-    const maxBottom = r.scrH - (foot && !step.above ? foot.offsetHeight : 0) - 8;
+    const maxBottom = r.scrH - footH - 8;
     if (step.above) {
       tt.style.top = `${r.top - 8 - tt.offsetHeight}px`;
     } else {
@@ -589,7 +597,7 @@
     layer.dataset.action = 'home-tip-dismiss';
     layer.innerHTML = `
       <div class="coach-spot" style="top:${r.top + 4}px;left:${r.left + 4}px;width:${r.right - r.left - 8}px;height:${r.bottom - r.top - 8}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
-      <div class="coach-tt tip-bl"><p class="ct-title">Deal của bạn ở đây</p><p class="ct-text">Đặt xong nhận ngay tại siêu thị, không tốn phí giao</p></div>`;
+      <div class="coach-tt tip-bl"><p class="ct-title">Deal của bạn ở đây</p><p class="ct-text">Đặt xong nhận ngay tại siêu thị, không tốn phí giao</p><div class="ct-foot"><span class="grow"></span><button class="ct-primary" data-action="home-tip-dismiss">Đã hiểu</button></div></div>`;
     scr.appendChild(layer);
     const tt = layer.querySelector('.coach-tt');
     tt.style.top = `${r.top - 4 - tt.offsetHeight}px`;
@@ -622,7 +630,8 @@
     const { name, arg } = route();
     if (name === 'reset') { S = fresh(); save(); location.replace('#/welcome'); return; }
     const key = `${name}/${arg || ''}`;
-    if (key !== lastRoute) { tipFor = tipFor && keepScroll ? tipFor : null; }
+    // tooltip "Đã thêm, bấm giỏ hàng để đặt" chỉ mất khi khách vào giỏ hoặc giỏ rỗng
+    if (S.cartTip && (name === 'cart' || !cartCount())) { S.cartTip = false; save(); }
     const prevBody = app.querySelector('.body');
     const scrollTop = keepScroll && prevBody ? prevBody.scrollTop : 0;
     const scr = (screens[name] || screens.welcome)(arg);
@@ -642,7 +651,7 @@
   }
 
   // ---------- actions ----------
-  // coachmark checkout: thao tác của khách trong lúc xem hướng dẫn được tính như bấm "Tiếp tục"
+  // coachmark checkout: chạm ra vùng tối = "Tiếp tục"
   const coachAdvance = () => {
     if (coachStep + 1 >= checkoutSteps().length) { S.coachDone = true; save(); } else coachStep += 1;
   };
@@ -652,7 +661,7 @@
     back: () => { if (history.length > 1) history.back(); else location.hash = '#/home'; },
     pdp: (d) => { location.hash = `#/pdp/${d.id}`; },
     noop: () => {},
-    add: (d) => { S.cart[d.id] = 1; tipFor = route().name === 'pdp' ? 'pdp' : route().name === 'home' ? 'home' : null; save(); render(true); },
+    add: (d) => { S.cart[d.id] = 1; if (['home', 'pdp', 'search'].includes(route().name)) S.cartTip = true; save(); render(true); },
     inc: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) + 1; save(); render(true); },
     dec: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) - 1; if (S.cart[d.id] <= 0) delete S.cart[d.id]; save(); render(true); },
     del: (d) => { delete S.cart[d.id]; save(); render(true); },
@@ -682,10 +691,10 @@
 
   app.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action]');
-    // bấm xuyên qua vùng sáng của coachmark: sang bước sau rồi thực hiện thao tác thật
-    if (app.querySelector('.coach-step') && !e.target.closest('.coach')) {
-      coachAdvance();
-      if (!el || !app.contains(el) || !actions[el.dataset.action] || el.dataset.action === 'noop') { render(true); return; }
+    // bấm xuyên qua vùng sáng của coachmark: thực hiện thao tác thật và ở lại bước đó;
+    // riêng nút "Đặt đơn" ở bước cuối thì kết thúc hướng dẫn
+    if (app.querySelector('.coach-step') && !e.target.closest('.coach') && e.target.closest('#co-order-btn')) {
+      coachAdvance(); render(true); return;
     }
     if (!el || !app.contains(el)) return;
     // nút bên trong thẻ sản phẩm không mở PDP
@@ -704,7 +713,7 @@
     holdEnd();
     holdTimer = setTimeout(() => {
       holdTimer = null; held = true;
-      S = fresh(); save(); coachStep = 0; guide = null; tipFor = null;
+      S = fresh(); save(); coachStep = 0; guide = null;
       toast = 'Đã làm mới, sẵn sàng cho khách mới';
       if (route().name === 'welcome') render(false); else location.hash = '#/welcome';
     }, HOLD_MS);

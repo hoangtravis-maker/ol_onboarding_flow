@@ -33,13 +33,14 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 
 ### 1. Welcome — `#/welcome`
 "Bạn đã tích điểm thành công" + 4 Deal online.
-- Khi giỏ trống: bàn tay nhỏ "tap" kèm vòng sáng chỉ vào nút **Mua** của deal đầu tiên.
-- Bấm **Mua**: nút đổi thành stepper. Footer hiện "Đặt deal online, nhận ngay tại siêu thị…" và nút **Tiếp tục đặt hàng · N món** (sang Giỏ hàng).
+- Nút **Mua** của deal đầu tiên có motion theo design (Figma `anim.btn.buy.type=pDeal`): 2 vòng sáng lan ra, dấu "+" trên icon giỏ nảy lên và xoay. Tất cả nút Mua dùng icon giỏ có dấu "+".
+- Bấm **Mua**: nút đổi thành stepper. Footer hiện "Đặt deal online, nhận ngay tại siêu thị…" và nút **Tiếp tục đặt hàng · N món** (sang Giỏ hàng, có motion `anim.btn.cart`). Màn hình không bị làm tối.
 - Bấm ảnh / tên sản phẩm: sang Chi tiết sản phẩm. Nút ✕: sang Home.
 
 ### 2. Home — `#/home`
-- Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"** trỏ vào tab Deals. Chạm bất kỳ đâu để tắt.
-- Bấm **Mua** trên deal: tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào tab Giỏ hàng.
+- Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"** trỏ vào tab Deals. Bấm **Đã hiểu** hoặc chạm bất kỳ đâu để tắt.
+- Nút **Mua** của deal đầu tiên có motion giống Welcome.
+- Bấm **Mua** (Home, Search, chi tiết sản phẩm): tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào giỏ hàng. Tooltip không tự tắt, chỉ mất khi khách vào giỏ hoặc giỏ rỗng. Bấm vào tooltip = sang giỏ hàng.
 - Thanh **tìm kiếm**: sang Search.
 - Thanh **"tại <siêu thị>"**: sang Đổi siêu thị.
 - Tab **Giỏ hàng**: sang Giỏ hàng.
@@ -48,10 +49,11 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
   - Bấm vào thì chạy lại onboarding từ màn Welcome, giữ nguyên giỏ hàng.
 
 ### 3. Chi tiết sản phẩm — `#/pdp/<id>`
-- Bấm **Mua**: nút đổi thành stepper, tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ ở header.
+- Bấm **Mua**: nút đổi thành stepper, tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ ở header (cùng hành vi với Home).
 
 ### 4. Giỏ hàng — `#/cart`
-- Tooltip **"Bấm mua hàng để đặt đơn"** phía trên footer, nút **Mua hàng** có vòng sáng.
+- Tooltip **"Bấm mua hàng để đặt đơn"** phía trên footer, mũi tên chỉ xuống nút. Bấm vào tooltip = sang Thanh toán.
+- Nút **Mua hàng** có motion theo design (Figma `anim.btn.cart`).
 - In-page noti voucher và "Thường được mua kèm" (bấm Mua để thêm vào giỏ).
 - Dòng "Dùng Voucher" hiện số voucher đang áp dụng.
 - Stepper +/–, xoá món: cập nhật giỏ và tổng tiền.
@@ -65,14 +67,16 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 | Mục 3 | "Chọn giờ nhận": Ngày mai / Thứ 2… | "Chọn giờ giao": Hôm nay / Ngày mai |
 | Hóa đơn | Không có phí giao | Thêm dòng "Phí vận chuyển"; nếu áp voucher giảm phí vận chuyển thì "Tổng khuyến mãi" có dòng "Giảm giá phí vận chuyển" |
 
+- Mặc định chọn sẵn ngày đầu tiên và khung giờ gần nhất (`pickup.selectedSlot` trong data).
 - **Đổi** siêu thị (cả 2 chế độ): sang Đổi siêu thị.
 - **Chọn khuyến mãi**: chỉ hiện voucher dùng được cho đơn hiện tại (tối đa 4). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn (có cả voucher không khả dụng).
 - Mỗi đơn dùng 1 voucher. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
 - Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng).
-- **Coachmark 4 bước** (lần đầu vào): Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra cách thanh toán → Đặt đơn là xong.
+- **Coachmark 4 bước** (lần đầu vào): Cách bạn nhận hàng → Áp dụng khuyến mãi → Kiểm tra phương thức thanh toán → Đặt đơn là xong.
   - Nút: Bỏ qua / Tiếp tục / Xem lại / Đã hiểu.
   - Bấm ra vùng tối = Tiếp tục (bước cuối = Đã hiểu).
-  - Bấm thao tác trong vùng sáng (chọn slot, Đổi siêu thị, Dùng voucher, Xem tất cả, chọn thanh toán, Xem hướng dẫn, Đặt đơn) thì thực hiện luôn và sang bước sau. Mở Đổi siêu thị / Ưu đãi của bạn rồi quay lại vẫn giữ bước coachmark.
+  - Bấm thao tác trong vùng sáng (chọn ngày/slot, Đổi siêu thị, Dùng voucher, Xem tất cả, chọn thanh toán, Xem hướng dẫn) thì thao tác có tác dụng nhưng **vẫn ở bước đó**. Riêng **Đặt đơn** ở bước cuối thì kết thúc hướng dẫn. Mở Đổi siêu thị / Ưu đãi của bạn rồi quay lại vẫn giữ bước coachmark.
+  - Bước thanh toán chỉ có tiêu đề "Kiểm tra phương thức thanh toán". Tooltip luôn nằm dưới vùng sáng, không che danh sách.
   - Text bước 1 đổi theo chế độ: "Đơn này nhận tại siêu thị …" hoặc "Đơn này giao đến …", kèm khung giờ đang chọn.
 
 ### 6. Ưu đãi của bạn — `#/vouchers`

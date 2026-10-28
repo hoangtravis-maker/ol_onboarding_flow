@@ -39,7 +39,7 @@ window.DATA = {
   pickup: {
     days: ['Ngày mai', 'Thứ 2, 19/10'],
     slots: ['16:00 - 17:00', '17:00 - 18:00', '18:00 - 19:00', '19:00 - 20:00'],
-    selectedSlot: 1,
+    selectedSlot: 0,   // mặc định chọn sẵn slot gần nhất
   },
 
   // 4 deal online ở Welcome screen + Home
