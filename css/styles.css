@@ -108,25 +108,24 @@ textarea { font: inherit; }
 .dp-now sup { font-size: 8px; line-height: 12px; vertical-align: top; margin-left: 1px; }
 .dp-old { color: var(--secondary); font-size: 10px; line-height: 12px; text-decoration: line-through; }
 .deal-qty { position: absolute; right: 12px; bottom: 12px; }
-/* motion nút mua — Figma anim.btn.buy.type=pDeal / anim.btn.cart (lặp mỗi 1.6s)
-   ring1: scale 100→120%, opacity 100→0, 600ms · ring2: delay 400ms, scale 100→150% (nút giỏ: 120%)
-   dấu +: 0–300ms lên 6px + xoay 90°, 300–600ms về chỗ + xoay tiếp 90° · giỏ: nghiêng −6° rồi về 0 */
+/* motion nút mua — Figma anim.btn.buy.type=pDeal / anim.btn.cart, chu kỳ 2s lặp lại (số liệu lấy từ Figma motion)
+   ring1: 0–30% scale 1→1.2, opacity 1→0 · ring2: giữ tới 20%, 20–50% scale 1→1.5 (nút giỏ: 1.2), opacity 1→0
+   dấu +: 0–15% lên 6px, xoay −180°→−90° · 15–30% về chỗ, xoay tới 0° · giỏ: xoay quanh góc dưới trái, 0→−6°→0 trong 0–30% */
 .buy-ic { flex-shrink: 0; overflow: visible; }
-.buy-ic path { transform-box: fill-box; transform-origin: center; }
 .anim-buy, .anim-cart { isolation: isolate; }
 .anim-cart { position: relative; }   /* .btn-buy đã position: absolute */
-.anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--brand); opacity: 0; pointer-events: none; }
-.anim-buy::before, .anim-cart::before { animation: ring1 1.6s ease-out infinite; }
-.anim-buy::after { animation: ring2-buy 1.6s ease-out infinite; }
-.anim-cart::after { animation: ring2-cart 1.6s ease-out infinite; }
-.anim-buy .bi-add, .anim-cart .bi-add { animation: bi-add 1.6s infinite; }
-.anim-buy .bi-cart, .anim-cart .bi-cart { animation: bi-cart 1.6s infinite; }
-@keyframes ring1 { 0% { transform: scale(1); opacity: 0.45; } 37.5%, 100% { transform: scale(1.2); opacity: 0; } }
-@keyframes ring2-buy { 0%, 25% { transform: scale(1); opacity: 0; } 25.01% { opacity: 0.45; } 62.5%, 100% { transform: scale(1.5); opacity: 0; } }
-@keyframes ring2-cart { 0%, 25% { transform: scale(1); opacity: 0; } 25.01% { opacity: 0.45; } 62.5%, 100% { transform: scale(1.2); opacity: 0; } }
-@keyframes bi-add { 0% { transform: translate(7.4px, 1.2px) rotate(0); animation-timing-function: ease-out; } 18.75% { transform: translate(7.4px, -4.8px) rotate(90deg); animation-timing-function: ease-in; } 37.5%, 100% { transform: translate(7.4px, 1.2px) rotate(180deg); } }
-@keyframes bi-cart { 0% { transform: translate(1px, 1px) rotate(0); animation-timing-function: ease-out; } 18.75% { transform: translate(1px, 1px) rotate(-6deg); animation-timing-function: ease-in; } 37.5%, 100% { transform: translate(1px, 1px) rotate(0); } }
-@media (prefers-reduced-motion: reduce) { .anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after, .anim-buy .buy-ic path, .anim-cart .buy-ic path { animation: none; } }
+.anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: rgba(50, 128, 246, 0.35); opacity: 0; pointer-events: none; }
+.anim-buy::before, .anim-cart::before { animation: ring1 2s infinite; }
+.anim-buy::after { animation: ring2-buy 2s infinite; }
+.anim-cart::after { animation: ring2-cart 2s infinite; }
+.anim-buy .bi-add, .anim-cart .bi-add { transform-box: fill-box; transform-origin: center; animation: bi-add 2s infinite; }
+.anim-buy .bi-cart, .anim-cart .bi-cart { transform-box: fill-box; transform-origin: 0% 100%; animation: bi-cart 2s infinite; }
+@keyframes ring1 { 0% { transform: scale(1); opacity: 1; animation-timing-function: ease-out; } 30%, 100% { transform: scale(1.2); opacity: 0; } }
+@keyframes ring2-buy { 0%, 20% { transform: scale(1); opacity: 1; animation-timing-function: ease-out; } 50%, 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes ring2-cart { 0%, 20% { transform: scale(1); opacity: 1; animation-timing-function: ease-out; } 50%, 100% { transform: scale(1.2); opacity: 0; } }
+@keyframes bi-add { 0% { transform: translate(7.4px, 1.2px) rotate(-180deg); animation-timing-function: ease-out; } 15% { transform: translate(7.4px, -4.8px) rotate(-90deg); animation-timing-function: ease-in; } 30%, 100% { transform: translate(7.4px, 1.2px) rotate(0); } }
+@keyframes bi-cart { 0% { transform: translate(1px, 1px) rotate(0); animation-timing-function: ease-out; } 15% { transform: translate(1px, 1px) rotate(-6deg); animation-timing-function: ease-out; } 30%, 100% { transform: translate(1px, 1px) rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after, .anim-buy .buy-ic path, .anim-cart .buy-ic path, .wl-foot.slide-up { animation: none; } }
 .deal-name { position: absolute; left: 8px; right: 8px; top: 191px; font-size: 12px; line-height: 16px; font-weight: 600; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* biến thể ở Home: tile 173×181, ảnh lệch 22/15 */
 .deal-home .deal-tile { height: 181px; }
@@ -144,6 +143,9 @@ textarea { font: inherit; }
 .wl-note { display: flex; align-items: center; gap: 10px; font-size: 12px; line-height: 16px; }
 .wl-note b { font-weight: 600; }
 .wl-foot .btn-l { padding-left: 16px; }
+/* sticky bar trượt từ dưới lên khi khách thêm món đầu tiên */
+.wl-foot.slide-up { animation: slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes slide-up { from { transform: translateY(100%); } to { transform: none; } }
 
 /* ---------- 2. Home ---------- */
 .scr-home .body { padding-bottom: 150px; }

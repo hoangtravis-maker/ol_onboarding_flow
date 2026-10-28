@@ -106,6 +106,7 @@
   // ---------- screens ----------
   const screens = {};
 
+  let wlFootIn = false;   // giỏ đã có món ở lần render trước — sticky bar Welcome chỉ trượt lên khi giỏ đi từ 0 lên 1
   // 1. Welcome screen — sau khi tích điểm ở POS
   screens.welcome = () => {
     const n = cartCount();
@@ -118,7 +119,7 @@
         <div class="deal-grid">${D.dealIds.map((id, i) => dealCard(byId[id], { motion: i === 0 })).join('')}</div>
       </div>
       ${n ? `
-      <div class="foot wl-foot">
+      <div class="foot wl-foot ${wlFootIn ? '' : 'slide-up'}">
         <div class="wl-note">${icon('walk-line', 20, 'c-brand')}<p><b>Đặt deal online, nhận ngay tại siêu thị</b>, <b class="c-safe">không tốn phí giao hàng</b></p></div>
         <button class="btn-l anim-cart" data-action="go" data-to="#/cart">${BUY_ICON(20)}Tiếp tục đặt hàng · ${n} món</button>
       </div>` : ''}
@@ -531,7 +532,7 @@
       text: '',
       buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
     { targets: ['#co-order-btn'], title: 'Đặt đơn là xong', above: true, noScroll: true,
-      text: 'Ghé siêu thị để lấy đơn hàng đã chọn',
+      text: '',
       buttons: [['Xem lại', 'coach-review'], ['Đã hiểu', 'coach-done']] },
   ];
 
@@ -639,6 +640,7 @@
     const body = app.querySelector('.body');
     if (body) body.scrollTop = scrollTop;
     lastRoute = key;
+    wlFootIn = cartCount() > 0;
     if (toast) { app.insertAdjacentHTML('beforeend', `<div class="toast">${toast}</div>`); toast = null; }
     const el = app.querySelector('.scr');
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
