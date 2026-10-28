@@ -414,15 +414,12 @@
   };
 
   // Bottom sheet "Hướng dẫn Chuyển khoản ngân hàng"
-  const bankGuideSheet = () => {
+  // nội dung bên trong sheet — đổi tab / bước chỉ vẽ lại phần này, sheet giữ nguyên (không chạy lại hiệu ứng mở)
+  const bankGuideBody = () => {
     const tab = D.bankGuide[guide.tab];
     const step = tab.steps[guide.step];
     const last = tab.steps.length - 1;
     return `
-    <div class="sheet-ov" data-action="guide-close"></div>
-    <div class="sheet">
-      <div class="sheet-hd"><button class="appbar-l" data-action="guide-close" aria-label="Đóng">${icon('close-line')}</button><h2>Hướng dẫn Chuyển khoản ngân hàng</h2></div>
-      <div class="sheet-body">
         <div class="gd-tabs">${D.bankGuide.map((t, i) => `<button class="${i === guide.tab ? 'on' : ''}" data-action="guide-tab" data-i="${i}">${t.tab}</button>`).join('')}</div>
         <div class="gd-card">
           <img class="gd-img" src="${step.img}" width="183" height="395" alt="Bước ${guide.step + 1}">
@@ -432,11 +429,16 @@
             <span class="gd-dots">${tab.steps.map((_, i) => `<i class="${i === guide.step ? 'on' : ''}"></i>`).join('')}</span>
             <button class="${guide.step < last ? '' : 'hide'}" data-action="guide-step" data-d="1">Tiếp tục</button>
           </div>
-        </div>
-      </div>
+        </div>`;
+  };
+  const bankGuideSheet = () => `
+    <div class="sheet-ov" data-action="guide-close"></div>
+    <div class="sheet">
+      <div class="sheet-hd"><button class="appbar-l" data-action="guide-close" aria-label="Đóng">${icon('close-line')}</button><h2>Hướng dẫn Chuyển khoản ngân hàng</h2></div>
+      <div class="sheet-body">${bankGuideBody()}</div>
       <div class="sheet-ft"><button class="btn-l" data-action="guide-close">Đóng</button></div>
     </div>`;
-  };
+  const updateGuide = () => { const b = app.querySelector('.sheet-body'); if (b) b.innerHTML = bankGuideBody(); else render(true); };
 
   // 6. "Ưu đãi của bạn" — mở từ "Xem tất cả" ở Checkout
   let vcPick;             // voucher đang tick trong màn này (chưa áp dụng)
@@ -672,8 +674,8 @@
     day: (d) => { S.day = Number(d.i); save(); render(true); },
     'guide-open': () => { guide = { tab: 0, step: 0 }; render(true); },
     'guide-close': () => { guide = null; render(true); },
-    'guide-tab': (d) => { guide = { tab: Number(d.i), step: 0 }; render(true); },
-    'guide-step': (d) => { guide.step += Number(d.d); render(true); },
+    'guide-tab': (d) => { guide = { tab: Number(d.i), step: 0 }; updateGuide(); },
+    'guide-step': (d) => { guide.step += Number(d.d); updateGuide(); },
     pay: (d) => { S.payment = d.id; save(); render(true); },
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
