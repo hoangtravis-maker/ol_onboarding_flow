@@ -32,7 +32,10 @@ window.DATA = {
       },
       voucher: { title: 'Bấm Dùng để áp dụng mã khuyến mãi', text: '' },
       payment: { title: 'Chọn phương thức thanh toán phù hợp', text: '' },
-      order: { title: 'Đặt đơn là xong', text: '' },     // câu cuối chưa chốt
+      order: {   // theo cách nhận hàng khách đang chọn
+        pickupTitle: 'Đặt xong là ghé siêu thị lấy hàng',
+        shipTitle: 'Đặt xong là chờ shipper giao tới',
+      },
       next: 'Tiếp tục',
       review: 'Xem lại',
       done: 'Đã hiểu',

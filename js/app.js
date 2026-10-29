@@ -558,7 +558,7 @@
         text: fill(isShip() ? c.receive.shipText : c.receive.pickupText), buttons: next },
       { id: 'voucher', targets: ['#co-s4-top'], pointAt: '.vc-hint .vc-act', title: c.voucher.title, text: c.voucher.text, buttons: next },
       { id: 'payment', targets: ['#co-s5'], title: c.payment.title, text: c.payment.text, buttons: next },
-      { id: 'order', targets: ['#co-order-btn'], title: c.order.title, text: c.order.text, above: true, noScroll: true,
+      { id: 'order', targets: ['#co-order-btn'], title: isShip() ? c.order.shipTitle : c.order.pickupTitle, above: true, noScroll: true, pad: 0, radius: '100px',
         buttons: [[c.review, 'coach-review'], [c.done, 'coach-done']] },
     ].filter((st) => st.id !== 'voucher' || D.vouchers.some((v) => !voucherBlock(v, subtotal())));
   };
@@ -606,7 +606,8 @@
     const base = scr.getBoundingClientRect();
     const bodyTop = body.getBoundingClientRect().top - base.top;
     const bodyBottom = body.getBoundingClientRect().bottom - base.top;
-    const pad = 4;
+    const pad = step.pad ?? 4;   // 0 = vùng sáng khít đúng phần tử (vd. nút Đặt đơn bo tròn)
+    if (step.radius) spot.style.borderRadius = step.radius;
     const place = () => {
       const r = unionRect(scr, step.targets);
       // phần bị cuộn khuất dưới thanh tiêu đề / footer thì cắt bớt
