@@ -6,10 +6,37 @@ window.DATA = {
     memberSince: '08/2022',
     points: '200.000',
     pointsValue: '~200.000 đ',
-    olCardBalance: '77.000 đ',
+    olCardBalance: 77000,        // số dư thẻ OneLife (đ). > 0 → mặc định thanh toán bằng thẻ OneLife, = 0 → Tiền mặt
     voucherCount: 8,
     // 'new' | 'churned' (lâu không mua online) | 'active' — nút "Xem lại hướng dẫn" chỉ hiện cho new / churned
     segment: 'new',
+  },
+
+  // ===== Text onboarding (configuration) — sửa câu chữ tại đây, không cần đụng code =====
+  // {store}, {address}, {slot}: tự thay bằng siêu thị / địa chỉ / khung giờ đang chọn
+  copy: {
+    welcomeBanner: 'Bạn đã tích điểm thành công',
+    welcomeAllDeals: 'Xem tất cả deal',                 // bấm: đóng màn 4 deal, cuộn tới khu deal ở Home
+    welcomeBar: { text: 'Đặt deal online, nhận ngay tại siêu thị', highlight: 'không tốn phí giao hàng' },
+    welcomeCta: 'Tiếp tục đặt hàng',
+    homeTip: { title: 'Deal của bạn ở đây', text: 'Đặt xong nhận ngay tại siêu thị, không tốn phí giao', button: 'Đã hiểu' },
+    cartAdded: 'Đã thêm, bấm giỏ hàng để đặt',          // tooltip sau khi bấm Mua ở Home / Search / PDP
+    replay: 'Xem lại hướng dẫn',
+    resetToast: 'Đã làm mới, sẵn sàng cho khách mới',
+    // Coachmark ở Checkout. Bước voucher chỉ hiện khi đơn có voucher dùng được.
+    checkoutCoach: {
+      receive: {
+        title: 'Cách bạn nhận hàng',
+        pickupText: 'Đơn này nhận tại siêu thị {store}, lúc {slot}',
+        shipText: 'Đơn này giao đến {address}, lúc {slot}',
+      },
+      voucher: { title: 'Bấm Dùng để áp dụng mã khuyến mãi', text: '' },
+      payment: { title: 'Chọn phương thức thanh toán phù hợp', text: '' },
+      order: { title: 'Đặt đơn là xong', text: '' },     // câu cuối chưa chốt
+      next: 'Tiếp tục',
+      review: 'Xem lại',
+      done: 'Đã hiểu',
+    },
   },
 
   // Nút "Xem lại hướng dẫn" ở Home: chỉ hiện trong N phút kể từ lúc khách tích điểm / đặt đơn offline ở POS
@@ -104,7 +131,7 @@ window.DATA = {
 
   // guide: true → hiện mô tả + link "Xem hướng dẫn" mở bottom sheet hướng dẫn chuyển khoản
   payments: [
-    { id: 'olcard', label: 'Thẻ OneLife', sub: 'Số dư: 20.000 đ', img: 'assets/img/pay-olcard.webp' },
+    { id: 'olcard', label: 'Thẻ OneLife', sub: 'Số dư: {balance}', img: 'assets/img/pay-olcard.webp' },
     { id: 'cash', label: 'Tiền mặt', img: 'assets/img/pay-cash.webp' },
     { id: 'bank', label: 'Chuyển khoản ngân hàng', sub: 'Chụp lại mã QR hoặc nhấn vào logo ngân hàng để thanh toán.', guide: true, img: 'assets/img/pay-vnpay.webp' },
     { id: 'onepay', label: 'Thẻ Visa / Master / JCB / ATM / Chuyển khoản', img: 'assets/img/pay-onepay.webp' },

@@ -72,7 +72,7 @@ textarea { font: inherit; }
 /* ---------- buttons ---------- */
 .btn-l { width: 100%; height: 40px; border-radius: 200px; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 24px 8px 16px; font-size: 16px; line-height: 24px; font-weight: 600; }
 .btn-s { background: var(--brand); color: #fff; border-radius: 200px; padding: 8px; font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap; }
-.btn-buy { position: absolute; right: 12px; bottom: 12px; height: 40px; padding: 8px 10px; border-radius: 200px; background: var(--brand); color: #fff; display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; font-weight: 600; filter: drop-shadow(0 2px 4px rgba(23, 25, 35, 0.12)); }
+.btn-buy { position: absolute; right: 12px; bottom: 12px; height: 40px; padding: 8px 10px; border-radius: 200px; background: var(--brand); color: #fff; display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; font-weight: 600; box-shadow: 0 0 0 2px #fff, 0 4px 10px rgba(23, 25, 35, 0.28); }  /* viền trắng + bóng: tách nút khỏi ảnh sản phẩm */
 
 /* stepper (quickAddToCart) */
 .qty { display: flex; width: 120px; height: 40px; flex-shrink: 0; }
@@ -125,7 +125,24 @@ textarea { font: inherit; }
 @keyframes ring2-cart { 0%, 20% { transform: scale(1); opacity: 1; animation-timing-function: ease-out; } 50%, 100% { transform: scale(1.2); opacity: 0; } }
 @keyframes bi-add { 0% { transform: translate(7.4px, 1.2px) rotate(-180deg); animation-timing-function: ease-out; } 15% { transform: translate(7.4px, -4.8px) rotate(-90deg); animation-timing-function: ease-in; } 30%, 100% { transform: translate(7.4px, 1.2px) rotate(0); } }
 @keyframes bi-cart { 0% { transform: translate(1px, 1px) rotate(0); animation-timing-function: ease-out; } 15% { transform: translate(1px, 1px) rotate(-6deg); animation-timing-function: ease-out; } 30%, 100% { transform: translate(1px, 1px) rotate(0); } }
-@media (prefers-reduced-motion: reduce) { .anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after, .anim-buy .buy-ic path, .anim-cart .buy-ic path, .wl-foot.slide-up { animation: none; } }
+/* animation mạnh hơn cho nút đi tiếp (Tiếp tục đặt hàng, Mua hàng): vòng sáng lan 150% + nút nhún nhẹ */
+.anim-strong { animation: btn-nudge 2s infinite; }
+.anim-strong::after { animation-name: ring2-buy; }
+@keyframes btn-nudge { 0%, 40%, 100% { transform: none; } 10% { transform: translateY(-4px); } 20% { transform: none; } 30% { transform: translateY(-2px); } }
+/* sau khi bấm Mua: icon giỏ (tab bar / header) nảy + vòng sáng, tới khi khách vào giỏ */
+.cart-hint { position: relative; isolation: isolate; }
+.cart-hint::before { content: ''; position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; z-index: -1; border-radius: 50%; background: rgba(50, 128, 246, 0.35); animation: cart-ring 1.4s ease-out infinite; }
+.cart-hint > svg { animation: cart-bounce 1.4s infinite; }
+@keyframes cart-ring { 0% { transform: scale(0.6); opacity: 1; } 70%, 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes cart-bounce { 0%, 50%, 100% { transform: none; } 15% { transform: translateY(-5px); } 30% { transform: none; } 40% { transform: translateY(-2px); } }
+/* coachmark bước voucher: chữ "Dùng" thành nút sáng + mũi tên chỉ vào */
+.vc-hint .vc-act { right: 10px; top: 40px; padding: 4px 12px; border-radius: 100px; background: var(--brand); color: #fff; isolation: isolate; }
+.vc-hint .vc-act::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: rgba(50, 128, 246, 0.35); animation: ring2-buy 2s infinite; }
+.vc-arrow { position: absolute; right: 26px; top: 72px; color: var(--brand); animation: vc-arrow 1s ease-in-out infinite; }
+@keyframes vc-arrow { 0%, 100% { transform: translateY(4px); } 50% { transform: translateY(-2px); } }
+/* Welcome: "Xem tất cả deal" */
+.wl-all { display: flex; align-items: center; justify-content: center; gap: 2px; margin: -8px auto 24px; padding: 8px 16px; color: var(--brand); font-size: 14px; line-height: 20px; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after, .anim-buy .buy-ic path, .anim-cart .buy-ic path, .wl-foot.slide-up, .anim-strong, .cart-hint::before, .cart-hint > svg, .vc-hint .vc-act::before, .vc-arrow { animation: none; } }
 .deal-name { position: absolute; left: 8px; right: 8px; top: 191px; font-size: 12px; line-height: 16px; font-weight: 600; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* biến thể ở Home: tile 173×181, ảnh lệch 22/15 */
 .deal-home .deal-tile { height: 181px; }
@@ -479,8 +496,7 @@ textarea { font: inherit; }
 /* ---------- coachmark ---------- */
 .coach { position: absolute; inset: 0; z-index: 30; }
 .coach-step { pointer-events: none; }
-.coach-step .coach-blk, .coach-step .coach-tt { pointer-events: auto; }
-.coach-blk { position: absolute; }
+.coach-step .coach-tt { pointer-events: auto; }
 .coach-spot { position: absolute; border-radius: 8px; pointer-events: none; transition: all 0.2s ease; }
 .coach-tt { position: absolute; left: 8px; right: 8px; background: var(--brand-dark); color: #fff; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 20px; animation: tt-in 0.2s ease-out; }
 .coach-tt::before { content: ''; position: absolute; border: 6px solid transparent; }
