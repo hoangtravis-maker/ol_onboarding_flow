@@ -40,7 +40,7 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 - Bấm ảnh / tên sản phẩm: sang Chi tiết sản phẩm. Nút ✕: sang Home.
 
 ### 2. Home — `#/home`
-- Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"** trỏ vào tab Deals. Bấm **Đã hiểu** hoặc chạm bất kỳ đâu để tắt.
+- Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"**, chỉ khoanh chip "Deals cho {tên}". Bấm **Đã hiểu** hoặc chạm bất kỳ đâu để tắt.
 - Nút **Mua** của deal đầu tiên có motion giống Welcome.
 - Bấm **Mua** (Home, Search, chi tiết sản phẩm): tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào giỏ hàng. Icon giỏ (tab bar / header) nảy lên kèm vòng sáng. Tooltip và hiệu ứng không tự tắt, chỉ mất khi khách vào giỏ hoặc giỏ rỗng. Bấm vào tooltip = sang giỏ hàng.
 - Thanh **tìm kiếm**: sang Search.

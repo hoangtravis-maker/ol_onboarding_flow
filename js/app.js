@@ -603,16 +603,16 @@
   function showHomeTip(scr) {
     const body = scr.querySelector('.body');
     body.style.overflow = 'hidden';
-    const r = unionRect(scr, ['#deal-tabs']);
+    const r = unionRect(scr, ['#deal-tabs .dtab-0']);   // chỉ khoanh chip "Deals cho {tên}"
     const layer = document.createElement('div');
     layer.className = 'coach';
     layer.dataset.action = 'home-tip-dismiss';
     layer.innerHTML = `
-      <div class="coach-spot" style="top:${r.top + 4}px;left:${r.left + 4}px;width:${r.right - r.left - 8}px;height:${r.bottom - r.top - 8}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      <div class="coach-spot" style="top:${r.top - 3}px;left:${r.left - 3}px;width:${r.right - r.left + 6}px;height:${r.bottom - r.top + 6}px;border-radius:18px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
       <div class="coach-tt tip-bl"><p class="ct-title">${D.copy.homeTip.title}</p><p class="ct-text">${D.copy.homeTip.text}</p><div class="ct-foot"><span class="grow"></span><button class="ct-primary" data-action="home-tip-dismiss">${D.copy.homeTip.button}</button></div></div>`;
     scr.appendChild(layer);
     const tt = layer.querySelector('.coach-tt');
-    tt.style.top = `${r.top - 4 - tt.offsetHeight}px`;
+    tt.style.top = `${r.top - 11 - tt.offsetHeight}px`;
   }
 
   // nút "Xem lại hướng dẫn": thu nhỏ khi đang cuộn, nở lại khi dừng; tự ẩn khi hết thời gian
