@@ -135,14 +135,13 @@ textarea { font: inherit; }
 .cart-hint > svg { animation: cart-bounce 1.4s infinite; }
 @keyframes cart-ring { 0% { transform: scale(0.6); opacity: 1; } 70%, 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes cart-bounce { 0%, 50%, 100% { transform: none; } 15% { transform: translateY(-5px); } 30% { transform: none; } 40% { transform: translateY(-2px); } }
-/* coachmark bước voucher: chữ "Dùng" thành nút sáng + mũi tên chỉ vào */
-.vc-hint .vc-act { right: 10px; top: 40px; padding: 4px 12px; border-radius: 100px; background: var(--brand); color: #fff; isolation: isolate; }
-.vc-hint .vc-act::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: rgba(50, 128, 246, 0.35); animation: ring2-buy 2s infinite; }
-.vc-arrow { position: absolute; right: 26px; top: 72px; color: var(--brand); animation: vc-arrow 1s ease-in-out infinite; }
-@keyframes vc-arrow { 0%, 100% { transform: translateY(4px); } 50% { transform: translateY(-2px); } }
+/* coachmark bước voucher: giữ chữ "Dùng" như cũ, chỉ thêm nhịp phóng to + quầng sáng loang ra phía sau */
+.vc-hint .vc-act { isolation: isolate; animation: vc-beat 2s ease-in-out infinite; }
+.vc-hint .vc-act::before { content: ''; position: absolute; inset: -4px -10px; z-index: -1; border-radius: 100px; background: rgba(50, 128, 246, 0.25); animation: ring2-buy 2s infinite; }
+@keyframes vc-beat { 0%, 30%, 100% { transform: scale(1); } 15% { transform: scale(1.15); } }
 /* Welcome: "Xem tất cả deal" */
 .wl-all { display: flex; align-items: center; justify-content: center; gap: 2px; margin: -8px auto 24px; padding: 8px 16px; color: var(--brand); font-size: 14px; line-height: 20px; font-weight: 600; }
-@media (prefers-reduced-motion: reduce) { .anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after, .anim-buy .buy-ic path, .anim-cart .buy-ic path, .wl-foot.slide-up, .anim-strong, .cart-hint::before, .cart-hint > svg, .vc-hint .vc-act::before, .vc-arrow { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .anim-buy::before, .anim-buy::after, .anim-cart::before, .anim-cart::after, .anim-buy .buy-ic path, .anim-cart .buy-ic path, .wl-foot.slide-up, .anim-strong, .cart-hint::before, .cart-hint > svg, .vc-hint .vc-act, .vc-hint .vc-act::before { animation: none; } }
 .deal-name { position: absolute; left: 8px; right: 8px; top: 191px; font-size: 12px; line-height: 16px; font-weight: 600; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* biến thể ở Home: tile 173×181, ảnh lệch 22/15 */
 .deal-home .deal-tile { height: 181px; }
@@ -466,12 +465,15 @@ textarea { font: inherit; }
 .gd-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--divider); }
 .gd-tabs button { flex: 1; height: 33px; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--tertiary); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .gd-tabs .on { color: var(--brand); font-weight: 600; border-bottom-color: var(--brand); }
-.gd-card { background: #fff; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 16px; box-shadow: inset 0 -1px 0 var(--divider); }
+.gd-card { background: #fff; border-radius: 8px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 16px; box-shadow: inset 0 -1px 0 var(--divider); }
+.gd-track { width: 100%; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.gd-track::-webkit-scrollbar { display: none; }
+.gd-slide { flex: 0 0 100%; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 0 16px; }
 .gd-img { width: 183px; height: 395px; border: 4px solid var(--divider); border-radius: 8px; object-fit: cover; }
 .gd-title { text-align: center; display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
 .gd-title small { font-size: 10px; line-height: 12px; color: var(--tertiary); }
 .gd-title p { font-size: 14px; line-height: 20px; min-height: 40px; }
-.gd-nav { width: 100%; display: flex; align-items: center; gap: 16px; }
+.gd-nav { width: 100%; padding: 0 16px; display: flex; align-items: center; gap: 16px; }
 .gd-nav button { flex: 1; color: var(--brand); font-size: 14px; line-height: 20px; font-weight: 600; padding: 6px 0; }
 .gd-nav button.hide { visibility: hidden; }
 .gd-dots { flex: 1; display: flex; justify-content: center; gap: 4px; }
@@ -500,7 +502,7 @@ textarea { font: inherit; }
 .coach-spot { position: absolute; border-radius: 8px; pointer-events: none; transition: all 0.2s ease; }
 .coach-tt { position: absolute; left: 8px; right: 8px; background: var(--brand-dark); color: #fff; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 20px; animation: tt-in 0.2s ease-out; }
 .coach-tt::before { content: ''; position: absolute; border: 6px solid transparent; }
-.coach-tt.tip-tl::before { bottom: 100%; left: 12px; border-bottom-color: var(--brand-dark); border-top-width: 0; }
+.coach-tt.tip-tl::before { bottom: 100%; left: var(--tip-x, 12px); border-bottom-color: var(--brand-dark); border-top-width: 0; }
 .coach-tt.tip-bl::before { top: 100%; left: 12px; border-top-color: var(--brand-dark); border-bottom-width: 0; }
 .coach-tt.tip-br::before { top: 100%; right: 80px; border-top-color: var(--brand-dark); border-bottom-width: 0; }
 .ct-title { font-weight: 600; }

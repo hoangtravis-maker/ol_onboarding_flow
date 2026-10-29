@@ -73,9 +73,9 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 - **Đổi** siêu thị (cả 2 chế độ): sang Đổi siêu thị.
 - **Chọn khuyến mãi**: chỉ hiện voucher dùng được cho đơn hiện tại (tối đa 4). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn (có cả voucher không khả dụng).
 - Mỗi đơn dùng 1 voucher. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
-- Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng).
+- Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng). Chuyển bước bằng cách vuốt ngang ảnh hoặc bấm Quay lại / Tiếp tục; chấm tròn theo bước đang xem. Đổi tab hay đổi bước sheet vẫn giữ nguyên, không đóng/mở lại.
 - **Coachmark** (lần đầu vào): Cách bạn nhận hàng → Bấm Dùng để áp dụng mã khuyến mãi → Chọn phương thức thanh toán phù hợp → Đặt đơn là xong.
-  - Bước voucher chỉ hiện khi đơn có voucher dùng được. Ở bước này chữ **Dùng** của voucher đầu tiên thành nút sáng, có mũi tên chỉ vào. Bấm Dùng = áp voucher; bấm Tiếp tục mà không Dùng thì không áp.
+  - Bước voucher chỉ hiện khi đơn có voucher dùng được. Ở bước này chữ **Dùng** của voucher đầu tiên giữ nguyên thiết kế (chữ xanh), chỉ có hiệu ứng nhịp + quầng sáng để gây chú ý; mũi tên của tooltip chỉ thẳng vào chữ Dùng. Bấm Dùng = áp voucher; bấm Tiếp tục mà không Dùng thì không áp.
   - Nút: Tiếp tục (không còn Bỏ qua) / Xem lại / Đã hiểu.
   - Vẫn cuộn màn hình được trong lúc xem hướng dẫn; vùng sáng và tooltip bám theo.
   - Bấm ra vùng tối = Tiếp tục (bước cuối = Đã hiểu).

@@ -298,7 +298,6 @@
 
   // bước coachmark đang hiện ở Checkout (null nếu không có)
   const coachId = () => (!S.coachDone && cartLines() && !guide ? (checkoutSteps()[coachStep] || {}).id : null);
-  const VC_ARROW = '<svg class="vc-arrow" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.5 13.5 7H10v7.5H6V7H2.5Z"/></svg>';
 
   screens.checkout = () => {
     const items = cartItems();
@@ -370,7 +369,6 @@
                 ${voucherImg(v)}
                 <div class="vc-txt">${MERCHANT}<p class="vc-title">${nb(v.title)}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
                 <a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>
-                ${vcHint && i === 0 ? VC_ARROW : ''}
                 ${v.qty ? `<span class="vc-qty">x${v.qty}</span>` : ''}
               </div>`;
             }).join('')}
@@ -422,21 +420,44 @@
 
   // Bottom sheet "Hướng dẫn Chuyển khoản ngân hàng"
   // nội dung bên trong sheet — đổi tab / bước chỉ vẽ lại phần này, sheet giữ nguyên (không chạy lại hiệu ứng mở)
+  // các bước xếp ngang trong .gd-track — vuốt tay hoặc bấm Quay lại / Tiếp tục đều được
   const bankGuideBody = () => {
     const tab = D.bankGuide[guide.tab];
-    const step = tab.steps[guide.step];
-    const last = tab.steps.length - 1;
     return `
         <div class="gd-tabs">${D.bankGuide.map((t, i) => `<button class="${i === guide.tab ? 'on' : ''}" data-action="guide-tab" data-i="${i}">${t.tab}</button>`).join('')}</div>
         <div class="gd-card">
-          <img class="gd-img" src="${step.img}" width="183" height="395" alt="Bước ${guide.step + 1}">
-          <div class="gd-title"><small>BƯỚC ${guide.step + 1}</small><p>${step.text}</p></div>
+          <div class="gd-track">${tab.steps.map((st, i) => `
+            <div class="gd-slide">
+              <img class="gd-img" src="${st.img}" width="183" height="395" alt="Bước ${i + 1}">
+              <div class="gd-title"><small>BƯỚC ${i + 1}</small><p>${st.text}</p></div>
+            </div>`).join('')}
+          </div>
           <div class="gd-nav">
-            <button class="${guide.step ? '' : 'hide'}" data-action="guide-step" data-d="-1">Quay lại</button>
-            <span class="gd-dots">${tab.steps.map((_, i) => `<i class="${i === guide.step ? 'on' : ''}"></i>`).join('')}</span>
-            <button class="${guide.step < last ? '' : 'hide'}" data-action="guide-step" data-d="1">Tiếp tục</button>
+            <button data-action="guide-step" data-d="-1">Quay lại</button>
+            <span class="gd-dots">${tab.steps.map(() => '<i></i>').join('')}</span>
+            <button data-action="guide-step" data-d="1">Tiếp tục</button>
           </div>
         </div>`;
+  };
+  // đồng bộ chấm + nút theo bước đang hiện
+  const syncGuide = () => {
+    const nav = app.querySelector('.gd-nav');
+    if (!nav) return;
+    const [prev, next] = nav.querySelectorAll('button');
+    const n = D.bankGuide[guide.tab].steps.length;
+    prev.classList.toggle('hide', guide.step === 0);
+    next.classList.toggle('hide', guide.step >= n - 1);
+    nav.querySelectorAll('.gd-dots i').forEach((d, i) => d.classList.toggle('on', i === guide.step));
+  };
+  const bindGuide = () => {
+    const track = app.querySelector('.gd-track');
+    if (!track) return;
+    track.scrollLeft = guide.step * track.clientWidth;
+    syncGuide();
+    track.addEventListener('scroll', () => {
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      if (i !== guide.step) { guide.step = i; syncGuide(); }
+    }, { passive: true });
   };
   const bankGuideSheet = () => `
     <div class="sheet-ov" data-action="guide-close"></div>
@@ -445,7 +466,7 @@
       <div class="sheet-body">${bankGuideBody()}</div>
       <div class="sheet-ft"><button class="btn-l" data-action="guide-close">Đóng</button></div>
     </div>`;
-  const updateGuide = () => { const b = app.querySelector('.sheet-body'); if (b) b.innerHTML = bankGuideBody(); else render(true); };
+  const updateGuide = () => { const b = app.querySelector('.sheet-body'); if (b) { b.innerHTML = bankGuideBody(); bindGuide(); } else render(true); };
 
   // 6. "Ưu đãi của bạn" — mở từ "Xem tất cả" ở Checkout
   let vcPick;             // voucher đang tick trong màn này (chưa áp dụng)
@@ -535,7 +556,7 @@
     return [
       { id: 'receive', targets: ['#co-s1', '#co-s2', '#co-slots'], title: c.receive.title,
         text: fill(isShip() ? c.receive.shipText : c.receive.pickupText), buttons: next },
-      { id: 'voucher', targets: ['#co-s4-top'], title: c.voucher.title, text: c.voucher.text, buttons: next },
+      { id: 'voucher', targets: ['#co-s4-top'], pointAt: '.vc-hint .vc-act', title: c.voucher.title, text: c.voucher.text, buttons: next },
       { id: 'payment', targets: ['#co-s5'], title: c.payment.title, text: c.payment.text, buttons: next },
       { id: 'order', targets: ['#co-order-btn'], title: c.order.title, text: c.order.text, above: true, noScroll: true,
         buttons: [[c.review, 'coach-review'], [c.done, 'coach-done']] },
@@ -595,6 +616,12 @@
       tt.style.top = step.above
         ? `${top - 8 - tt.offsetHeight}px`
         : `${Math.min(bottom + 8, r.scrH - footH - 8 - tt.offsetHeight)}px`;
+      // mũi tên tooltip chỉ đúng vào phần tử cần bấm (vd. chữ "Dùng")
+      const pt = step.pointAt && scr.querySelector(step.pointAt);
+      if (pt) {
+        const p = pt.getBoundingClientRect(), t = tt.getBoundingClientRect();
+        tt.style.setProperty('--tip-x', `${p.left + p.width / 2 - t.left - 6}px`);
+      }
     };
     place();
     body.addEventListener('scroll', () => requestAnimationFrame(place), { passive: true });
@@ -662,6 +689,7 @@
     }
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
     if (name === 'home') initReplay(el);
+    if (guide) bindGuide();
     if (name === 'search' && !keepScroll) el.querySelector('input').focus();
     if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
       const steps = checkoutSteps();
@@ -691,7 +719,12 @@
     'guide-open': () => { guide = { tab: 0, step: 0 }; render(true); },
     'guide-close': () => { guide = null; render(true); },
     'guide-tab': (d) => { guide = { tab: Number(d.i), step: 0 }; updateGuide(); },
-    'guide-step': (d) => { guide.step += Number(d.d); updateGuide(); },
+    'guide-step': (d) => {
+      const track = app.querySelector('.gd-track');
+      const n = D.bankGuide[guide.tab].steps.length;
+      const i = Math.max(0, Math.min(n - 1, guide.step + Number(d.d)));
+      track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+    },
     pay: (d) => { S.payment = d.id; save(); render(true); },
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
