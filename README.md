@@ -65,6 +65,7 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 
 | | Nhận tại siêu thị | Giao hàng |
 |---|---|---|
+| Mục 1 | Dòng giải thích dưới nút chọn: "Bạn tới siêu thị lấy hàng, không tốn phí giao" | "Shipper giao tới địa chỉ của bạn, có phí giao" |
 | Mục 2 | "Chọn nơi nhận": siêu thị + **Đổi** | "Chọn địa chỉ giao": người nhận + địa chỉ (**Đổi** chưa có behavior); khung "Siêu thị phục vụ bạn" + **Đổi** |
 | Mục 3 | "Chọn giờ nhận": Ngày mai / Thứ 2… | "Chọn giờ giao": Hôm nay / Ngày mai |
 | Hóa đơn | Không có phí giao | Thêm dòng "Phí vận chuyển"; nếu áp voucher giảm phí vận chuyển thì "Tổng khuyến mãi" có dòng "Giảm giá phí vận chuyển" |
@@ -74,15 +75,16 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 - **Chọn khuyến mãi**: chỉ hiện voucher dùng được cho đơn hiện tại (tối đa 4). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn (có cả voucher không khả dụng).
 - Mỗi đơn dùng 1 voucher. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
 - Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng). Chuyển bước bằng cách vuốt ngang ảnh hoặc bấm Quay lại / Tiếp tục; chấm tròn theo bước đang xem. Đổi tab hay đổi bước sheet vẫn giữ nguyên, không đóng/mở lại.
-- **Coachmark** (lần đầu vào): Cách bạn nhận hàng → Bấm Dùng để áp dụng mã khuyến mãi → Chọn phương thức thanh toán phù hợp → bước Đặt đơn: "Đặt xong là ghé siêu thị lấy hàng" (Nhận tại siêu thị) hoặc "Đặt xong là chờ shipper giao tới" (Giao hàng). Vùng sáng ở bước này khít đúng nút Đặt đơn.
+- **Coachmark** (lần đầu vào): Cách bạn nhận hàng → Bấm Dùng để áp dụng mã khuyến mãi → Chọn phương thức thanh toán phù hợp (bước cuối). Không còn bước Đặt đơn: ý "đặt xong thì sao" đã nằm ở dòng giải thích dưới Mục 1.
+  - Bước 1 khoanh Mục 1–3; text đổi theo chế độ: "Kiểm tra lại nơi nhận và giờ nhận hàng." hoặc "Kiểm tra lại địa chỉ giao và giờ giao hàng."
+  - Vùng sáng có viền xanh.
   - Bước voucher chỉ hiện khi đơn có voucher dùng được. Ở bước này chữ **Dùng** của voucher đầu tiên giữ nguyên thiết kế (chữ xanh), chỉ có hiệu ứng nhịp + quầng sáng để gây chú ý; mũi tên của tooltip chỉ thẳng vào chữ Dùng. Bấm Dùng = áp voucher; bấm Tiếp tục mà không Dùng thì không áp.
   - Nút: Tiếp tục (không còn Bỏ qua) / Xem lại / Đã hiểu.
   - Vẫn cuộn màn hình được trong lúc xem hướng dẫn; vùng sáng và tooltip bám theo.
   - Bấm ra vùng tối = Tiếp tục (bước cuối = Đã hiểu).
-  - Bấm thao tác trong vùng sáng (chọn ngày/slot, Đổi siêu thị, Dùng voucher, Xem tất cả, chọn thanh toán, Xem hướng dẫn) thì thao tác có tác dụng nhưng **vẫn ở bước đó**. Riêng **Đặt đơn** ở bước cuối thì kết thúc hướng dẫn. Mở Đổi siêu thị / Ưu đãi của bạn rồi quay lại vẫn giữ bước coachmark.
+  - Bấm thao tác trong vùng sáng (chọn ngày/slot, Đổi siêu thị, Dùng voucher, Xem tất cả, chọn thanh toán, Xem hướng dẫn) thì thao tác có tác dụng nhưng **vẫn ở bước đó**. Nút **Đặt đơn** nằm ngoài vùng sáng nên bấm vào = Tiếp tục (ở bước cuối = Đã hiểu). Mở Đổi siêu thị / Ưu đãi của bạn rồi quay lại vẫn giữ bước coachmark.
   - Tooltip luôn nằm dưới vùng sáng, không che danh sách.
 - Phương thức thanh toán mặc định: thẻ OneLife nếu còn số dư (`user.olCardBalance` > 0), không thì Tiền mặt.
-  - Text bước 1 đổi theo chế độ: "Đơn này nhận tại siêu thị …" hoặc "Đơn này giao đến …", kèm khung giờ đang chọn.
 
 ### 6. Ưu đãi của bạn — `#/vouchers`
 Mở từ **Xem tất cả** ở Thanh toán.
@@ -109,7 +111,7 @@ Toàn bộ text, giá, sản phẩm, siêu thị, địa chỉ giao, khung giờ
 | Key | Dùng cho |
 |---|---|
 | `user` | Tên, điểm, số dư thẻ OneLife, `segment` (new / churned / active) |
-| `copy` | **Text onboarding** (configuration): Welcome, tooltip, coachmark Home và Checkout. `{store}`, `{address}`, `{slot}` tự thay theo lựa chọn hiện tại |
+| `copy` | **Text onboarding** (configuration): Welcome, tooltip, coachmark Home và Checkout, dòng giải thích Giao hàng / Nhận tại siêu thị (`deliveryHint`) |
 | `replayMinutes` | Thời gian hiện nút "Xem lại hướng dẫn" |
 | `stores` | Danh sách siêu thị (cái đầu tiên là mặc định) |
 | `delivery` | Người nhận, địa chỉ, ngày/khung giờ giao, phí giao |

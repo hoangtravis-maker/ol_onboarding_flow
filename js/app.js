@@ -35,7 +35,6 @@
   const isShip = () => S.deli === 'ship';
   // ngày / khung giờ theo phương thức giao
   const timeCfg = () => (isShip() ? D.delivery : D.pickup);
-  const slotText = () => timeCfg().slots[S.slot] || timeCfg().slots[0];
   const shipFee = () => (isShip() ? D.delivery.fee : 0);
   const vById = Object.fromEntries(D.vouchers.map((v) => [v.id, v]));
   // lý do voucher chưa dùng được (null = dùng được)
@@ -320,6 +319,7 @@
             <button class="${S.deli === 'ship' ? 'on' : ''}" data-action="deli" data-v="ship"><i>${icon('e-bike-line', 16)}</i>Giao hàng</button>
             <button class="${S.deli === 'pickup' ? 'on' : ''}" data-action="deli" data-v="pickup"><i>${icon('walk-line', 16)}</i>Nhận tại siêu thị</button>
           </div>
+          <p class="co-deli-hint">${D.copy.deliveryHint[isShip() ? 'ship' : 'pickup']}</p>
         </section>
         <section class="co-sec" id="co-s2">
           ${isShip() ? `
@@ -549,16 +549,15 @@
   // ---------- coachmarks ----------
   const COACH_DIM = 'rgba(45, 55, 72, 0.6)';
 
-  const fill = (t) => t.replace('{store}', store().name).replace('{address}', D.delivery.address).replace('{slot}', slotText().replace(' - ', '-'));
   const checkoutSteps = () => {
     const c = D.copy.checkoutCoach;
     const next = [[c.next, 'coach-next']];
     return [
       { id: 'receive', targets: ['#co-s1', '#co-s2', '#co-slots'], title: c.receive.title,
-        text: fill(isShip() ? c.receive.shipText : c.receive.pickupText), buttons: next },
+        text: isShip() ? c.receive.shipText : c.receive.pickupText, buttons: next },
       { id: 'voucher', targets: ['#co-s4-top'], pointAt: '.vc-hint .vc-act', title: c.voucher.title, text: c.voucher.text, buttons: next },
-      { id: 'payment', targets: ['#co-s5'], title: c.payment.title, text: c.payment.text, buttons: next },
-      { id: 'order', targets: ['#co-order-btn'], title: isShip() ? c.order.shipTitle : c.order.pickupTitle, above: true, noScroll: true, pad: 0, radius: '100px',
+      // bước cuối: Xem lại / Đã hiểu
+      { id: 'payment', targets: ['#co-s5'], title: c.payment.title, text: c.payment.text,
         buttons: [[c.review, 'coach-review'], [c.done, 'coach-done']] },
     ].filter((st) => st.id !== 'voucher' || D.vouchers.some((v) => !voucherBlock(v, subtotal())));
   };
@@ -606,8 +605,7 @@
     const base = scr.getBoundingClientRect();
     const bodyTop = body.getBoundingClientRect().top - base.top;
     const bodyBottom = body.getBoundingClientRect().bottom - base.top;
-    const pad = step.pad ?? 4;   // 0 = vùng sáng khít đúng phần tử (vd. nút Đặt đơn bo tròn)
-    if (step.radius) spot.style.borderRadius = step.radius;
+    const pad = 4;
     const place = () => {
       const r = unionRect(scr, step.targets);
       // phần bị cuộn khuất dưới thanh tiêu đề / footer thì cắt bớt
