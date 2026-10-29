@@ -13,7 +13,6 @@ window.DATA = {
   },
 
   // ===== Text onboarding (configuration) — sửa câu chữ tại đây, không cần đụng code =====
-  // {store}, {address}, {slot}: tự thay bằng siêu thị / địa chỉ / khung giờ đang chọn
   copy: {
     welcomeBanner: 'Bạn đã tích điểm thành công',
     welcomeAllDeals: 'Xem tất cả deal',                 // bấm: đóng màn 4 deal, cuộn tới khu deal ở Home
@@ -23,12 +22,17 @@ window.DATA = {
     cartAdded: 'Đã thêm, bấm giỏ hàng để đặt',          // tooltip sau khi bấm Mua ở Home / Search / PDP
     replay: 'Xem lại hướng dẫn',
     resetToast: 'Đã làm mới, sẵn sàng cho khách mới',
+    // Checkout: help text dưới nút chọn Giao hàng / Nhận tại siêu thị (highlight = phần in đậm)
+    deliveryHint: {
+      pickup: { text: 'Bạn tới siêu thị lấy hàng,', highlight: 'không tốn phí giao' },
+      ship: { text: 'Shipper giao tới địa chỉ của bạn,', highlight: 'có phí giao' },
+    },
     // Coachmark ở Checkout. Bước voucher chỉ hiện khi đơn có voucher dùng được.
     checkoutCoach: {
       receive: {
         title: 'Cách bạn nhận hàng',
-        pickupText: 'Đơn này nhận tại siêu thị {store}, lúc {slot}',
-        shipText: 'Đơn này giao đến {address}, lúc {slot}',
+        pickupText: 'Kiểm tra lại nơi nhận và giờ nhận hàng.',
+        shipText: 'Kiểm tra lại địa chỉ giao và giờ giao hàng.',
       },
       voucher: { title: 'Bấm Dùng để áp dụng mã khuyến mãi', text: '' },
       payment: { title: 'Chọn phương thức thanh toán phù hợp', text: '' },
@@ -137,7 +141,7 @@ window.DATA = {
     { id: 'olcard', label: 'Thẻ OneLife', sub: 'Số dư: {balance}', img: 'assets/img/pay-olcard.webp' },
     { id: 'cash', label: 'Tiền mặt', img: 'assets/img/pay-cash.webp' },
     { id: 'bank', label: 'Chuyển khoản ngân hàng', sub: 'Chụp lại mã QR hoặc nhấn vào logo ngân hàng để thanh toán.', guide: true, img: 'assets/img/pay-vnpay.webp' },
-    { id: 'onepay', label: 'Thẻ Visa / Master / JCB / ATM / Chuyển khoản', img: 'assets/img/pay-onepay.webp' },
+    { id: 'onepay', label: 'Thẻ Visa / Master / JCB / ATM', img: 'assets/img/pay-onepay.webp' },
     { id: 'applepay', label: 'Apple Pay', img: 'assets/img/pay-applepay.webp' },
     { id: 'momo', label: 'Ví MoMo', img: 'assets/img/pay-momo.webp' },
   ],

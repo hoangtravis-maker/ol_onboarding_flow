@@ -367,6 +367,10 @@ textarea { font: inherit; }
 .co-deli i { display: flex; padding: 8px; border-radius: 24px; background: var(--brand-light); }
 .co-deli .on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
 .co-deli .on i { background: #fff; color: var(--primary); }
+/* help text: nhỏ hơn nội dung chính, có icon xanh + phần in đậm để liếc là thấy */
+.co-deli-hint { display: flex; align-items: flex-start; gap: 4px; font-size: 12px; line-height: 16px; color: var(--secondary); }
+.co-deli-hint .ic { flex: none; margin-top: 1px; color: var(--brand); }
+.co-deli-hint b { font-weight: 600; color: var(--primary); }
 .co-addr { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; }
 .co-addr a { color: var(--brand); font-weight: 600; font-size: 14px; padding: 0 8px; }
 .co-storeic { display: flex; padding: 6px; border-radius: 44px; background: var(--brand-light); color: var(--brand); }
@@ -499,6 +503,7 @@ textarea { font: inherit; }
 .coach { position: absolute; inset: 0; z-index: 30; }
 .coach-step { pointer-events: none; }
 .coach-step .coach-tt { pointer-events: auto; }
+.coach-step .coach-spot { outline: 3px solid var(--brand); border-radius: 12px; }   /* viền xanh quanh vùng sáng (theo mockup 29/10) */
 .coach-spot { position: absolute; border-radius: 8px; pointer-events: none; transition: all 0.2s ease; }
 .coach-tt { position: absolute; left: 8px; right: 8px; background: var(--brand-dark); color: #fff; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 20px; animation: tt-in 0.2s ease-out; }
 .coach-tt::before { content: ''; position: absolute; border: 6px solid transparent; }
