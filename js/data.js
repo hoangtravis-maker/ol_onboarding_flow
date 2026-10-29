@@ -22,10 +22,10 @@ window.DATA = {
     cartAdded: 'Đã thêm, bấm giỏ hàng để đặt',          // tooltip sau khi bấm Mua ở Home / Search / PDP
     replay: 'Xem lại hướng dẫn',
     resetToast: 'Đã làm mới, sẵn sàng cho khách mới',
-    // Checkout: dòng giải thích dưới nút chọn Giao hàng / Nhận tại siêu thị
+    // Checkout: help text dưới nút chọn Giao hàng / Nhận tại siêu thị (highlight = phần in đậm)
     deliveryHint: {
-      pickup: 'Bạn tới siêu thị lấy hàng, không tốn phí giao',
-      ship: 'Shipper giao tới địa chỉ của bạn, có phí giao',
+      pickup: { text: 'Bạn tới siêu thị lấy hàng,', highlight: 'không tốn phí giao' },
+      ship: { text: 'Shipper giao tới địa chỉ của bạn,', highlight: 'có phí giao' },
     },
     // Coachmark ở Checkout. Bước voucher chỉ hiện khi đơn có voucher dùng được.
     checkoutCoach: {
@@ -36,6 +36,10 @@ window.DATA = {
       },
       voucher: { title: 'Bấm Dùng để áp dụng mã khuyến mãi', text: '' },
       payment: { title: 'Chọn phương thức thanh toán phù hợp', text: '' },
+      order: {   // theo cách nhận hàng khách đang chọn
+        pickupTitle: 'Đặt xong là ghé siêu thị lấy hàng',
+        shipTitle: 'Đặt xong là chờ shipper giao tới',
+      },
       next: 'Tiếp tục',
       review: 'Xem lại',
       done: 'Đã hiểu',
@@ -137,7 +141,7 @@ window.DATA = {
     { id: 'olcard', label: 'Thẻ OneLife', sub: 'Số dư: {balance}', img: 'assets/img/pay-olcard.webp' },
     { id: 'cash', label: 'Tiền mặt', img: 'assets/img/pay-cash.webp' },
     { id: 'bank', label: 'Chuyển khoản ngân hàng', sub: 'Chụp lại mã QR hoặc nhấn vào logo ngân hàng để thanh toán.', guide: true, img: 'assets/img/pay-vnpay.webp' },
-    { id: 'onepay', label: 'Thẻ Visa / Master / JCB / ATM / Chuyển khoản', img: 'assets/img/pay-onepay.webp' },
+    { id: 'onepay', label: 'Thẻ Visa / Master / JCB / ATM', img: 'assets/img/pay-onepay.webp' },
     { id: 'applepay', label: 'Apple Pay', img: 'assets/img/pay-applepay.webp' },
     { id: 'momo', label: 'Ví MoMo', img: 'assets/img/pay-momo.webp' },
   ],
