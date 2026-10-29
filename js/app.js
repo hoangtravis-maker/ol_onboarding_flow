@@ -12,7 +12,7 @@
 
   // ---------- state (giữ trong sessionStorage để F5 không mất giỏ) ----------
   const KEY = 'ol-proto-v1';
-  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: 'olcard', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false, posAt: Date.now() });
+  const fresh = () => ({ cart: {}, homeTipSeen: false, coachDone: false, payment: D.user.olCardBalance > 0 ? 'olcard' : 'cash', slot: D.pickup.selectedSlot, deli: 'pickup', usePoints: false, posAt: Date.now() });
   let S;
   try { S = JSON.parse(sessionStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); }
   if (!S.posAt) S.posAt = Date.now();
@@ -106,6 +106,7 @@
   // ---------- screens ----------
   const screens = {};
 
+  let dealsJump = false;  // vừa bấm "Xem tất cả deal" ở Welcome → cuộn tới khu deal khi vào Home
   let wlFootIn = false;   // giỏ đã có món ở lần render trước — sticky bar Welcome chỉ trượt lên khi giỏ đi từ 0 lên 1
   // 1. Welcome screen — sau khi tích điểm ở POS
   screens.welcome = () => {
@@ -114,14 +115,15 @@
     <div class="scr scr-welcome">
       <div class="appbar"><button class="appbar-l" data-action="go" data-to="#/home" aria-label="Đóng">${icon('close-line')}</button></div>
       <div class="body">
-        <div class="wl-banner">Bạn đã tích điểm thành công</div>
+        <div class="wl-banner">${D.copy.welcomeBanner}</div>
         <img class="wl-headline ${n ? 'is-a2c' : ''}" src="assets/img/headline.webp" width="245" height="76" alt="Deal online dành riêng cho bạn — Chỉ trong 24h">
         <div class="deal-grid">${D.dealIds.map((id, i) => dealCard(byId[id], { motion: i === 0 })).join('')}</div>
+        <button class="wl-all" data-action="all-deals">${D.copy.welcomeAllDeals}${icon('arrow-right-s-line', 16)}</button>
       </div>
       ${n ? `
       <div class="foot wl-foot ${wlFootIn ? '' : 'slide-up'}">
-        <div class="wl-note">${icon('walk-line', 20, 'c-brand')}<p><b>Đặt deal online, nhận ngay tại siêu thị</b>, <b class="c-safe">không tốn phí giao hàng</b></p></div>
-        <button class="btn-l anim-cart" data-action="go" data-to="#/cart">${BUY_ICON(20)}Tiếp tục đặt hàng · ${n} món</button>
+        <div class="wl-note">${icon('walk-line', 20, 'c-brand')}<p><b>${D.copy.welcomeBar.text}</b>, <b class="c-safe">${D.copy.welcomeBar.highlight}</b></p></div>
+        <button class="btn-l anim-cart anim-strong" data-action="go" data-to="#/cart">${BUY_ICON(20)}${D.copy.welcomeCta} · ${n} món</button>
       </div>` : ''}
     </div>`;
   };
@@ -154,7 +156,7 @@
                 <button class="m-pt-btn" data-action="noop">Sử dụng điểm ${icon('arrow-right-s-line', 12)}</button>
               </div>
               <div class="m-right">
-                <div class="m-util" data-action="noop"><div><span>Thẻ OneLife</span><a>Tặng đến 90k ${icon('arrow-right-s-line', 12)}</a></div><b>${u.olCardBalance}</b></div>
+                <div class="m-util" data-action="noop"><div><span>Thẻ OneLife</span><a>Tặng đến 90k ${icon('arrow-right-s-line', 12)}</a></div><b>${fmt(u.olCardBalance)} đ</b></div>
                 <div class="m-util" data-action="noop"><div><span>Phiếu giảm giá</span><a>Giảm 50k cho đơn từ 500k ... ${icon('arrow-right-s-line', 12)}</a></div><i class="m-count">${u.voucherCount}</i></div>
               </div>
             </div>
@@ -181,12 +183,12 @@
           <a class="tab on" data-action="noop"><img src="assets/img/tab-home.webp" width="24" height="24" alt=""><span>Trang chủ</span></a>
           <a class="tab" data-action="noop">${icon('price-tag-3-line', 24)}<span>Khuyến mãi</span></a>
           <a class="tab-qr" data-action="noop"><img src="assets/img/tab-qr.webp" width="52" height="52" alt="Quét mã"></a>
-          <a class="tab dim" data-action="go" data-to="#/cart"><i class="tab-cart">${icon('shopping-cart-2-line', 24)}${n ? `<span class="badge badge-dk">${n}</span>` : ''}</i><span>Giỏ hàng</span></a>
+          <a class="tab dim" data-action="go" data-to="#/cart"><i class="tab-cart ${S.cartTip && n ? 'cart-hint' : ''}">${icon('shopping-cart-2-line', 24)}${n ? `<span class="badge badge-dk">${n}</span>` : ''}</i><span>Giỏ hàng</span></a>
           <a class="tab dim" data-action="noop" data-hold="reset"><img src="assets/img/tab-avatar.webp" width="44" height="44" alt="Tài khoản"></a>
         </nav>
       </div>
-      ${replayLeft() > 0 ? `<a class="replay" data-action="replay">${icon('restart-line', 18)}<span>Xem lại hướng dẫn</span></a>` : ''}
-      ${S.cartTip && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-down tt-home-cart', '#/cart') : ''}
+      ${replayLeft() > 0 ? `<a class="replay" data-action="replay">${icon('restart-line', 18)}<span>${D.copy.replay}</span></a>` : ''}
+      ${S.cartTip && n ? tooltip(D.copy.cartAdded, 'tt-down tt-home-cart', '#/cart') : ''}
     </div>`;
   };
 
@@ -201,7 +203,7 @@
       <div class="pdp-hd">
         <button class="appbar-icon" data-action="back" aria-label="Quay lại">${icon('arrow-left-s-line')}</button>
         <div class="pdp-search" data-action="noop">${icon('search-line', 20, 'c-sec')}<span>Tìm kiếm</span></div>
-        <button class="pdp-cart" data-action="go" data-to="#/cart" aria-label="Giỏ hàng">${icon('shopping-cart-2-line', 20)}${n ? `<span class="badge">${n}</span>` : ''}</button>
+        <button class="pdp-cart ${S.cartTip && n ? 'cart-hint' : ''}" data-action="go" data-to="#/cart" aria-label="Giỏ hàng">${icon('shopping-cart-2-line', 20)}${n ? `<span class="badge">${n}</span>` : ''}</button>
       </div>
       <div class="body">
         <div class="pdp-img">
@@ -232,7 +234,7 @@
       <div class="foot pdp-foot">
         ${S.cart[p.id] ? qtyStepper(p, 'qty-wide') : `<button class="btn-l" data-action="add" data-id="${p.id}">${BUY_ICON()}Mua</button>`}
       </div>
-      ${S.cartTip && n ? tooltip('Đã thêm, bấm giỏ hàng để đặt', 'tt-up tt-pdp-cart', '#/cart') : ''}
+      ${S.cartTip && n ? tooltip(D.copy.cartAdded, 'tt-up tt-pdp-cart', '#/cart') : ''}
     </div>`;
   };
 
@@ -275,11 +277,10 @@
         </div>
       </div>
       <div class="foot cart-foot">
-        ${n ? tooltip('Bấm mua hàng để đặt đơn', 'tt-down tt-cart', '#/checkout') : ''}
         <div class="cf-row" data-action="noop">${icon('coupon-3-line', 20, 'c-brand')}<b class="grow">Dùng Voucher</b><small>Đã áp dụng ${appliedVoucher(sum) ? 1 : 0} Voucher</small>${icon('arrow-right-s-line', 16)}</div>
         <div class="btn-group">
           <div class="bg-left"><p class="c-safe">Tiết kiệm ${fmt(listTotal() - sum)} đ</p><p class="bg-price"><b>${fmt(sum)} đ</b><s>${fmt(listTotal())} đ</s></p></div>
-          <button class="bg-btn ${n ? 'anim-cart' : ''}" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout">${BUY_ICON(20)}<b>Mua hàng</b><span> · ${n} món</span></button>
+          <button class="bg-btn ${n ? 'anim-cart anim-strong' : ''}" data-action="${n ? 'go' : 'noop'}" data-to="#/checkout">${BUY_ICON(20)}<b>Mua hàng</b><span> · ${n} món</span></button>
         </div>
       </div>
     </div>`;
@@ -295,9 +296,13 @@
     return `<div class="vc-img vc-cash"><b>${v.imgTitle}</b><span class="vc-circle">${icon('coin-fill', 24)}</span></div>`;
   };
 
+  // bước coachmark đang hiện ở Checkout (null nếu không có)
+  const coachId = () => (!S.coachDone && cartLines() && !guide ? (checkoutSteps()[coachStep] || {}).id : null);
+
   screens.checkout = () => {
     const items = cartItems();
     const sum = subtotal();
+    const vcHint = coachId() === 'voucher';
     const vc = appliedVoucher(sum);
     const vcAmt = vc ? voucherAmount(vc, sum) : 0;
     const fee = shipFee();
@@ -357,10 +362,10 @@
           <div id="co-s4-top">
             ${titleCheckout(4, 'Chọn khuyến mãi', '<a class="co-all" data-action="go" data-to="#/vouchers">Xem tất cả</a>')}
             <div class="co-code"><span class="grow">Nhập mã khuyến mãi của bạn tại đây</span><i></i><a data-action="noop">Áp dụng</a></div>
-            <div class="vc-list">${D.vouchers.filter((v) => !voucherBlock(v, sum)).slice(0, 4).map((v) => {
+            <div class="vc-list">${D.vouchers.filter((v) => !voucherBlock(v, sum)).slice(0, 4).map((v, i) => {
               const on = vc === v;
               return `
-              <div class="vc ${on ? 'applied' : ''}">
+              <div class="vc ${on ? 'applied' : ''} ${vcHint && i === 0 ? 'vc-hint' : ''}">
                 ${voucherImg(v)}
                 <div class="vc-txt">${MERCHANT}<p class="vc-title">${nb(v.title)}</p><p class="vc-cond">${v.cond}</p><p class="vc-exp">${v.expiry}</p></div>
                 <a class="vc-act" data-action="voucher" data-id="${v.id}">${on ? 'Gỡ' : 'Dùng'}</a>
@@ -382,7 +387,7 @@
             <div class="pay-row" data-action="pay" data-id="${m.id}">
               <span class="radio ${S.payment === m.id ? 'on' : ''}"></span>
               <img src="${m.img}" width="32" height="32" alt="">
-              <div class="grow"><p>${m.label}</p>${m.sub ? `<small class="${m.guide ? 'pay-desc' : ''}">${m.sub}${m.guide ? ' <a class="pay-guide" data-action="guide-open">Xem hướng dẫn</a>' : ''}</small>` : ''}</div>
+              <div class="grow"><p>${m.label}</p>${m.sub ? `<small class="${m.guide ? 'pay-desc' : ''}">${m.sub.replace('{balance}', `${fmt(D.user.olCardBalance)} đ`)}${m.guide ? ' <a class="pay-guide" data-action="guide-open">Xem hướng dẫn</a>' : ''}</small>` : ''}</div>
             </div>`).join('')}
             <div class="pay-add">
               <a data-action="noop">${icon('add-line', 20)}${D.payAdd.label}</a>
@@ -415,21 +420,44 @@
 
   // Bottom sheet "Hướng dẫn Chuyển khoản ngân hàng"
   // nội dung bên trong sheet — đổi tab / bước chỉ vẽ lại phần này, sheet giữ nguyên (không chạy lại hiệu ứng mở)
+  // các bước xếp ngang trong .gd-track — vuốt tay hoặc bấm Quay lại / Tiếp tục đều được
   const bankGuideBody = () => {
     const tab = D.bankGuide[guide.tab];
-    const step = tab.steps[guide.step];
-    const last = tab.steps.length - 1;
     return `
         <div class="gd-tabs">${D.bankGuide.map((t, i) => `<button class="${i === guide.tab ? 'on' : ''}" data-action="guide-tab" data-i="${i}">${t.tab}</button>`).join('')}</div>
         <div class="gd-card">
-          <img class="gd-img" src="${step.img}" width="183" height="395" alt="Bước ${guide.step + 1}">
-          <div class="gd-title"><small>BƯỚC ${guide.step + 1}</small><p>${step.text}</p></div>
+          <div class="gd-track">${tab.steps.map((st, i) => `
+            <div class="gd-slide">
+              <img class="gd-img" src="${st.img}" width="183" height="395" alt="Bước ${i + 1}">
+              <div class="gd-title"><small>BƯỚC ${i + 1}</small><p>${st.text}</p></div>
+            </div>`).join('')}
+          </div>
           <div class="gd-nav">
-            <button class="${guide.step ? '' : 'hide'}" data-action="guide-step" data-d="-1">Quay lại</button>
-            <span class="gd-dots">${tab.steps.map((_, i) => `<i class="${i === guide.step ? 'on' : ''}"></i>`).join('')}</span>
-            <button class="${guide.step < last ? '' : 'hide'}" data-action="guide-step" data-d="1">Tiếp tục</button>
+            <button data-action="guide-step" data-d="-1">Quay lại</button>
+            <span class="gd-dots">${tab.steps.map(() => '<i></i>').join('')}</span>
+            <button data-action="guide-step" data-d="1">Tiếp tục</button>
           </div>
         </div>`;
+  };
+  // đồng bộ chấm + nút theo bước đang hiện
+  const syncGuide = () => {
+    const nav = app.querySelector('.gd-nav');
+    if (!nav) return;
+    const [prev, next] = nav.querySelectorAll('button');
+    const n = D.bankGuide[guide.tab].steps.length;
+    prev.classList.toggle('hide', guide.step === 0);
+    next.classList.toggle('hide', guide.step >= n - 1);
+    nav.querySelectorAll('.gd-dots i').forEach((d, i) => d.classList.toggle('on', i === guide.step));
+  };
+  const bindGuide = () => {
+    const track = app.querySelector('.gd-track');
+    if (!track) return;
+    track.scrollLeft = guide.step * track.clientWidth;
+    syncGuide();
+    track.addEventListener('scroll', () => {
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      if (i !== guide.step) { guide.step = i; syncGuide(); }
+    }, { passive: true });
   };
   const bankGuideSheet = () => `
     <div class="sheet-ov" data-action="guide-close"></div>
@@ -438,7 +466,7 @@
       <div class="sheet-body">${bankGuideBody()}</div>
       <div class="sheet-ft"><button class="btn-l" data-action="guide-close">Đóng</button></div>
     </div>`;
-  const updateGuide = () => { const b = app.querySelector('.sheet-body'); if (b) b.innerHTML = bankGuideBody(); else render(true); };
+  const updateGuide = () => { const b = app.querySelector('.sheet-body'); if (b) { b.innerHTML = bankGuideBody(); bindGuide(); } else render(true); };
 
   // 6. "Ưu đãi của bạn" — mở từ "Xem tất cả" ở Checkout
   let vcPick;             // voucher đang tick trong màn này (chưa áp dụng)
@@ -512,7 +540,7 @@
       <div class="sr-top">
         <button class="sr-back" data-action="back" aria-label="Quay lại">${icon('arrow-left-s-line')}</button>
         <label class="sr-input">${icon('search-line', 20, 'c-brand')}<input type="search" data-filter="search" value="${searchQ}" placeholder="${D.search.placeholder}" autocomplete="off"></label>
-        <button class="sr-cart" data-action="go" data-to="#/cart" aria-label="Giỏ hàng">${icon('shopping-cart-2-line', 22)}${n ? `<span class="badge">${n}</span>` : ''}</button>
+        <button class="sr-cart ${S.cartTip && n ? 'cart-hint' : ''}" data-action="go" data-to="#/cart" aria-label="Giỏ hàng">${icon('shopping-cart-2-line', 22)}${n ? `<span class="badge">${n}</span>` : ''}</button>
       </div>
       <div class="body" id="sr-body">${searchBody()}</div>
     </div>`;
@@ -521,22 +549,19 @@
   // ---------- coachmarks ----------
   const COACH_DIM = 'rgba(45, 55, 72, 0.6)';
 
-  const checkoutSteps = () => [
-    { targets: ['#co-s1', '#co-s2', '#co-slots'], title: 'Cách bạn nhận hàng',
-      text: isShip()
-        ? `Đơn này giao đến ${D.delivery.address}, lúc ${slotText().replace(' - ', '-')}`
-        : `Đơn này nhận tại siêu thị ${store().name}, lúc ${slotText().replace(' - ', '-')}`,
-      buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
-    { targets: ['#co-s4-top'], title: 'Bấm Dùng để áp dụng mã khuyến mãi',
-      text: '',
-      buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
-    { targets: ['#co-s5'], title: 'Kiểm tra phương thức thanh toán',
-      text: '',
-      buttons: [['Bỏ qua', 'coach-skip'], ['Tiếp tục', 'coach-next']] },
-    { targets: ['#co-order-btn'], title: 'Đặt đơn là xong', above: true, noScroll: true,
-      text: '',
-      buttons: [['Xem lại', 'coach-review'], ['Đã hiểu', 'coach-done']] },
-  ];
+  const fill = (t) => t.replace('{store}', store().name).replace('{address}', D.delivery.address).replace('{slot}', slotText().replace(' - ', '-'));
+  const checkoutSteps = () => {
+    const c = D.copy.checkoutCoach;
+    const next = [[c.next, 'coach-next']];
+    return [
+      { id: 'receive', targets: ['#co-s1', '#co-s2', '#co-slots'], title: c.receive.title,
+        text: fill(isShip() ? c.receive.shipText : c.receive.pickupText), buttons: next },
+      { id: 'voucher', targets: ['#co-s4-top'], pointAt: '.vc-hint .vc-act', title: c.voucher.title, text: c.voucher.text, buttons: next },
+      { id: 'payment', targets: ['#co-s5'], title: c.payment.title, text: c.payment.text, buttons: next },
+      { id: 'order', targets: ['#co-order-btn'], title: isShip() ? c.order.shipTitle : c.order.pickupTitle, above: true, noScroll: true, pad: 0, radius: '100px',
+        buttons: [[c.review, 'coach-review'], [c.done, 'coach-done']] },
+    ].filter((st) => st.id !== 'voucher' || D.vouchers.some((v) => !voucherBlock(v, subtotal())));
+  };
 
   function unionRect(scr, sels) {
     const base = scr.getBoundingClientRect();
@@ -547,63 +572,75 @@
     return { top: top - base.top, bottom: bottom - base.top, left: left - base.left, right: right - base.left, scrH: base.height, scrW: base.width };
   }
 
+  // Không khoá cuộn: khách vẫn vuốt được; vùng sáng và tooltip bám theo phần tử khi cuộn.
+  // Chạm ra vùng tối = "Tiếp tục" (xử lý trong click handler theo toạ độ vùng sáng).
   function showCoach(scr, step, idx, total) {
     const body = scr.querySelector('.body');
+    const foot = scr.querySelector('.foot');
+    const footH = foot && !step.above ? foot.offsetHeight : 0;
     if (!step.noScroll) {
       const first = scr.querySelector(step.targets[0]);
       body.scrollTop += first.getBoundingClientRect().top - body.getBoundingClientRect().top - 6;
+      // còn thiếu chỗ cho tooltip phía dưới thì cuộn thêm
+      const r0 = unionRect(scr, step.targets);
+      const TT_H = step.text ? 132 : 108;
+      const lack = r0.bottom + 8 + TT_H - (r0.scrH - footH - 8);
+      if (lack > 0) body.scrollTop += lack;
     }
-    body.style.overflow = 'hidden';
-    let r = unionRect(scr, step.targets);
-    const pad = 4;
-    const foot = scr.querySelector('.foot');
-    const footH = foot && !step.above ? foot.offsetHeight : 0;
-    const TT_H = step.text ? 132 : 108;   // chiều cao ước lượng của tooltip
-    const lack = r.bottom + 8 + TT_H - (r.scrH - footH - 8);
-    if (!step.above && lack > 0) { body.scrollTop += lack; r = unionRect(scr, step.targets); }
-    // phần vùng sáng bị cuộn lên dưới thanh tiêu đề thì cắt bớt
-    r.top = Math.max(r.top, body.getBoundingClientRect().top - scr.getBoundingClientRect().top - 6);
     const layer = document.createElement('div');
     layer.className = 'coach coach-step';
-    const top = r.top + (step.above ? 0 : 6), left = r.left + pad, right = r.right - pad;
-    // 4 tấm chắn trong suốt quanh vùng sáng: bấm ra ngoài = "Tiếp tục"; bấm trong vùng sáng thì thao tác thật (xem click handler)
-    const blk = (st) => `<div class="coach-blk" data-action="coach-out" style="${st}"></div>`;
     layer.innerHTML = `
-      ${blk(`top:0;left:0;right:0;height:${top}px`)}${blk(`top:${r.bottom}px;left:0;right:0;bottom:0`)}
-      ${blk(`top:${top}px;left:0;width:${left}px;height:${r.bottom - top}px`)}${blk(`top:${top}px;left:${right}px;right:0;height:${r.bottom - top}px`)}
-      <div class="coach-spot" style="top:${top}px;left:${left}px;width:${right - left}px;height:${r.bottom - top}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      <div class="coach-spot" style="box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
       <div class="coach-tt ${step.above ? 'tip-br' : 'tip-tl'}">
         <p class="ct-title">${step.title}</p>
         ${step.text ? `<p class="ct-text">${step.text}</p>` : ''}
         <div class="ct-foot">
           <span class="ct-dots">${Array.from({ length: total }, (_, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('')}</span>
           <span class="grow"></span>
-          ${step.buttons.map(([label, act], i) => `<button class="${i ? 'ct-primary' : 'ct-ghost'}" data-action="${act}">${label}</button>`).join('')}
+          ${step.buttons.map(([label, act], i) => `<button class="${i || step.buttons.length === 1 ? 'ct-primary' : 'ct-ghost'}" data-action="${act}">${label}</button>`).join('')}
         </div>
       </div>`;
     scr.appendChild(layer);
+    const spot = layer.querySelector('.coach-spot');
     const tt = layer.querySelector('.coach-tt');
-    const maxBottom = r.scrH - footH - 8;
-    if (step.above) {
-      tt.style.top = `${r.top - 8 - tt.offsetHeight}px`;
-    } else {
-      tt.style.top = `${Math.min(r.bottom + 8, maxBottom - tt.offsetHeight)}px`;
-    }
+    const base = scr.getBoundingClientRect();
+    const bodyTop = body.getBoundingClientRect().top - base.top;
+    const bodyBottom = body.getBoundingClientRect().bottom - base.top;
+    const pad = step.pad ?? 4;   // 0 = vùng sáng khít đúng phần tử (vd. nút Đặt đơn bo tròn)
+    if (step.radius) spot.style.borderRadius = step.radius;
+    const place = () => {
+      const r = unionRect(scr, step.targets);
+      // phần bị cuộn khuất dưới thanh tiêu đề / footer thì cắt bớt
+      const top = step.above ? r.top : Math.max(r.top + 6, bodyTop - 6);
+      const bottom = step.above ? r.bottom : Math.min(r.bottom, bodyBottom);
+      Object.assign(spot.style, { top: `${top}px`, left: `${r.left + pad}px`, width: `${r.right - r.left - pad * 2}px`, height: `${Math.max(bottom - top, 0)}px` });
+      tt.style.top = step.above
+        ? `${top - 8 - tt.offsetHeight}px`
+        : `${Math.min(bottom + 8, r.scrH - footH - 8 - tt.offsetHeight)}px`;
+      // mũi tên tooltip chỉ đúng vào phần tử cần bấm (vd. chữ "Dùng")
+      const pt = step.pointAt && scr.querySelector(step.pointAt);
+      if (pt) {
+        const p = pt.getBoundingClientRect(), t = tt.getBoundingClientRect();
+        tt.style.setProperty('--tip-x', `${p.left + p.width / 2 - t.left - 6}px`);
+      }
+    };
+    place();
+    body.addEventListener('scroll', () => requestAnimationFrame(place), { passive: true });
   }
 
   function showHomeTip(scr) {
     const body = scr.querySelector('.body');
     body.style.overflow = 'hidden';
-    const r = unionRect(scr, ['#deal-tabs']);
+    const r = unionRect(scr, ['#deal-tabs .dtab-0']);   // chỉ khoanh chip "Deals cho {tên}"
     const layer = document.createElement('div');
     layer.className = 'coach';
     layer.dataset.action = 'home-tip-dismiss';
     layer.innerHTML = `
-      <div class="coach-spot" style="top:${r.top + 4}px;left:${r.left + 4}px;width:${r.right - r.left - 8}px;height:${r.bottom - r.top - 8}px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
-      <div class="coach-tt tip-bl"><p class="ct-title">Deal của bạn ở đây</p><p class="ct-text">Đặt xong nhận ngay tại siêu thị, không tốn phí giao</p><div class="ct-foot"><span class="grow"></span><button class="ct-primary" data-action="home-tip-dismiss">Đã hiểu</button></div></div>`;
+      <div class="coach-spot" style="top:${r.top - 3}px;left:${r.left - 3}px;width:${r.right - r.left + 6}px;height:${r.bottom - r.top + 6}px;border-radius:18px;box-shadow:0 0 0 2000px ${COACH_DIM}"></div>
+      <div class="coach-tt tip-bl"><p class="ct-title">${D.copy.homeTip.title}</p><p class="ct-text">${D.copy.homeTip.text}</p><div class="ct-foot"><span class="grow"></span><button class="ct-primary" data-action="home-tip-dismiss">${D.copy.homeTip.button}</button></div></div>`;
     scr.appendChild(layer);
     const tt = layer.querySelector('.coach-tt');
-    tt.style.top = `${r.top - 4 - tt.offsetHeight}px`;
+    tt.style.top = `${r.top - 11 - tt.offsetHeight}px`;
   }
 
   // nút "Xem lại hướng dẫn": thu nhỏ khi đang cuộn, nở lại khi dừng; tự ẩn khi hết thời gian
@@ -645,11 +682,19 @@
     wlFootIn = cartCount() > 0;
     if (toast) { app.insertAdjacentHTML('beforeend', `<div class="toast">${toast}</div>`); toast = null; }
     const el = app.querySelector('.scr');
+    if (name === 'home' && dealsJump) {
+      dealsJump = false;
+      const tabs = el.querySelector('#deal-tabs');
+      const top = body.scrollTop + tabs.getBoundingClientRect().top - body.getBoundingClientRect().top - 8;
+      body.scrollTo({ top, behavior: 'smooth' });
+    }
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
     if (name === 'home') initReplay(el);
+    if (guide) bindGuide();
     if (name === 'search' && !keepScroll) el.querySelector('input').focus();
     if (name === 'checkout' && !S.coachDone && cartLines() && !guide) {
       const steps = checkoutSteps();
+      coachStep = Math.min(coachStep, steps.length - 1);
       showCoach(el, steps[coachStep], coachStep, steps.length);
     }
   }
@@ -675,30 +720,38 @@
     'guide-open': () => { guide = { tab: 0, step: 0 }; render(true); },
     'guide-close': () => { guide = null; render(true); },
     'guide-tab': (d) => { guide = { tab: Number(d.i), step: 0 }; updateGuide(); },
-    'guide-step': (d) => { guide.step += Number(d.d); updateGuide(); },
+    'guide-step': (d) => {
+      const track = app.querySelector('.gd-track');
+      const n = D.bankGuide[guide.tab].steps.length;
+      const i = Math.max(0, Math.min(n - 1, guide.step + Number(d.d)));
+      track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+    },
     pay: (d) => { S.payment = d.id; save(); render(true); },
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
     'coach-next': () => { coachStep += 1; render(true); },
+    // khách đã tự chọn xem deal → không cần coachmark "Deal của bạn ở đây" nữa
+    'all-deals': () => { dealsJump = true; S.homeTipSeen = true; save(); location.hash = '#/home'; },
     // xem lại onboarding từ đầu, giữ nguyên giỏ hàng
     replay: () => { S.homeTipSeen = false; S.coachDone = false; coachStep = 0; save(); location.hash = '#/welcome'; },
-    'coach-out': () => { coachAdvance(); render(true); },
     voucher: (d) => { S.voucher = S.voucher === d.id ? null : d.id; save(); render(true); },
     'vc-pick': (d) => { vcPick = vcPick === d.id ? null : d.id; render(true); },
     'vc-apply': () => { S.voucher = vcPick; save(); history.back(); },
     'store-pick': (d) => { S.storeId = d.id; save(); history.back(); },
     'search-chip': (d) => { searchQ = d.q; render(true); },
-    'coach-skip': () => { S.coachDone = true; save(); render(true); },
     'coach-review': () => { coachStep = 0; render(true); },
     'coach-done': () => { S.coachDone = true; save(); render(true); },
   };
 
   app.addEventListener('click', (e) => {
     const el = e.target.closest('[data-action]');
-    // bấm xuyên qua vùng sáng của coachmark: thực hiện thao tác thật và ở lại bước đó;
+    // coachmark Checkout: chạm ra vùng tối = "Tiếp tục"; chạm trong vùng sáng = thao tác thật, ở lại bước đó;
     // riêng nút "Đặt đơn" ở bước cuối thì kết thúc hướng dẫn
-    if (app.querySelector('.coach-step') && !e.target.closest('.coach') && e.target.closest('#co-order-btn')) {
-      coachAdvance(); render(true); return;
+    const coach = app.querySelector('.coach-step');
+    if (coach && !e.target.closest('.coach-tt')) {
+      const sp = coach.querySelector('.coach-spot').getBoundingClientRect();
+      const inside = e.clientX >= sp.left && e.clientX <= sp.right && e.clientY >= sp.top && e.clientY <= sp.bottom;
+      if (!inside || e.target.closest('#co-order-btn')) { e.stopPropagation(); coachAdvance(); render(true); return; }
     }
     if (!el || !app.contains(el)) return;
     // nút bên trong thẻ sản phẩm không mở PDP
@@ -718,7 +771,7 @@
     holdTimer = setTimeout(() => {
       holdTimer = null; held = true;
       S = fresh(); save(); coachStep = 0; guide = null;
-      toast = 'Đã làm mới, sẵn sàng cho khách mới';
+      toast = D.copy.resetToast;
       if (route().name === 'welcome') render(false); else location.hash = '#/welcome';
     }, HOLD_MS);
   });

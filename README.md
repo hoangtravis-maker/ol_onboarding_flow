@@ -34,13 +34,15 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 ### 1. Welcome — `#/welcome`
 "Bạn đã tích điểm thành công" + 4 Deal online.
 - Nút **Mua** của deal đầu tiên có motion theo design (Figma `anim.btn.buy.type=pDeal`): 2 vòng sáng lan ra, dấu "+" trên icon giỏ nảy lên và xoay. Tất cả nút Mua dùng icon giỏ có dấu "+".
-- Bấm **Mua**: nút đổi thành stepper. Footer hiện "Đặt deal online, nhận ngay tại siêu thị…" và nút **Tiếp tục đặt hàng · N món** (sang Giỏ hàng, có motion `anim.btn.cart`). Thanh này trượt từ dưới lên khi khách thêm món đầu tiên; màn hình không bị làm tối.
+- Bấm **Mua**: nút đổi thành stepper. Footer hiện "Đặt deal online, nhận ngay tại siêu thị…" và nút **Tiếp tục đặt hàng · N món** (sang Giỏ hàng, motion `anim.btn.cart` + nút nhún nhẹ). Thanh này trượt từ dưới lên khi khách thêm món đầu tiên; màn hình không bị làm tối.
+- **Xem tất cả deal** (dưới 4 deal): đóng màn này, sang Home và tự cuộn tới khu deal. Đi đường này thì không hiện coachmark "Deal của bạn ở đây".
+- Nút Mua có viền trắng + bóng để nổi hẳn lên khỏi ảnh sản phẩm.
 - Bấm ảnh / tên sản phẩm: sang Chi tiết sản phẩm. Nút ✕: sang Home.
 
 ### 2. Home — `#/home`
-- Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"** trỏ vào tab Deals. Bấm **Đã hiểu** hoặc chạm bất kỳ đâu để tắt.
+- Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"**, chỉ khoanh chip "Deals cho {tên}". Bấm **Đã hiểu** hoặc chạm bất kỳ đâu để tắt.
 - Nút **Mua** của deal đầu tiên có motion giống Welcome.
-- Bấm **Mua** (Home, Search, chi tiết sản phẩm): tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào giỏ hàng. Tooltip không tự tắt, chỉ mất khi khách vào giỏ hoặc giỏ rỗng. Bấm vào tooltip = sang giỏ hàng.
+- Bấm **Mua** (Home, Search, chi tiết sản phẩm): tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào giỏ hàng. Icon giỏ (tab bar / header) nảy lên kèm vòng sáng. Tooltip và hiệu ứng không tự tắt, chỉ mất khi khách vào giỏ hoặc giỏ rỗng. Bấm vào tooltip = sang giỏ hàng.
 - Thanh **tìm kiếm**: sang Search.
 - Thanh **"tại <siêu thị>"**: sang Đổi siêu thị.
 - Tab **Giỏ hàng**: sang Giỏ hàng.
@@ -52,8 +54,8 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 - Bấm **Mua**: nút đổi thành stepper, tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ ở header (cùng hành vi với Home).
 
 ### 4. Giỏ hàng — `#/cart`
-- Tooltip **"Bấm mua hàng để đặt đơn"** phía trên footer, mũi tên chỉ xuống nút. Bấm vào tooltip = sang Thanh toán.
-- Nút **Mua hàng** có motion theo design (Figma `anim.btn.cart`).
+- Không có tooltip (bỏ theo review 28/10 vì khách bấm nhầm vào tooltip và tooltip che "Dùng Voucher").
+- Nút **Mua hàng** có motion `anim.btn.cart`, vòng sáng lan rộng hơn và nút nhún nhẹ để kéo mắt khách.
 - In-page noti voucher và "Thường được mua kèm" (bấm Mua để thêm vào giỏ).
 - Dòng "Dùng Voucher" hiện số voucher đang áp dụng.
 - Stepper +/–, xoá món: cập nhật giỏ và tổng tiền.
@@ -71,12 +73,15 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 - **Đổi** siêu thị (cả 2 chế độ): sang Đổi siêu thị.
 - **Chọn khuyến mãi**: chỉ hiện voucher dùng được cho đơn hiện tại (tối đa 4). **Dùng / Gỡ** áp dụng ngay. **Xem tất cả**: sang Ưu đãi của bạn (có cả voucher không khả dụng).
 - Mỗi đơn dùng 1 voucher. Tổng tiền và "Tiết kiệm" chỉ trừ voucher đang áp dụng.
-- Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng).
-- **Coachmark 4 bước** (lần đầu vào): Cách bạn nhận hàng → Bấm Dùng để áp dụng mã khuyến mãi → Kiểm tra phương thức thanh toán → Đặt đơn là xong.
-  - Nút: Bỏ qua / Tiếp tục / Xem lại / Đã hiểu.
+- Chọn phương thức thanh toán. "Chuyển khoản ngân hàng" có link **Xem hướng dẫn**, mở bottom sheet 2 tab (Chụp lại mã QR / Ứng dụng ngân hàng). Chuyển bước bằng cách vuốt ngang ảnh hoặc bấm Quay lại / Tiếp tục; chấm tròn theo bước đang xem. Đổi tab hay đổi bước sheet vẫn giữ nguyên, không đóng/mở lại.
+- **Coachmark** (lần đầu vào): Cách bạn nhận hàng → Bấm Dùng để áp dụng mã khuyến mãi → Chọn phương thức thanh toán phù hợp → bước Đặt đơn: "Đặt xong là ghé siêu thị lấy hàng" (Nhận tại siêu thị) hoặc "Đặt xong là chờ shipper giao tới" (Giao hàng). Vùng sáng ở bước này khít đúng nút Đặt đơn.
+  - Bước voucher chỉ hiện khi đơn có voucher dùng được. Ở bước này chữ **Dùng** của voucher đầu tiên giữ nguyên thiết kế (chữ xanh), chỉ có hiệu ứng nhịp + quầng sáng để gây chú ý; mũi tên của tooltip chỉ thẳng vào chữ Dùng. Bấm Dùng = áp voucher; bấm Tiếp tục mà không Dùng thì không áp.
+  - Nút: Tiếp tục (không còn Bỏ qua) / Xem lại / Đã hiểu.
+  - Vẫn cuộn màn hình được trong lúc xem hướng dẫn; vùng sáng và tooltip bám theo.
   - Bấm ra vùng tối = Tiếp tục (bước cuối = Đã hiểu).
   - Bấm thao tác trong vùng sáng (chọn ngày/slot, Đổi siêu thị, Dùng voucher, Xem tất cả, chọn thanh toán, Xem hướng dẫn) thì thao tác có tác dụng nhưng **vẫn ở bước đó**. Riêng **Đặt đơn** ở bước cuối thì kết thúc hướng dẫn. Mở Đổi siêu thị / Ưu đãi của bạn rồi quay lại vẫn giữ bước coachmark.
-  - Bước thanh toán chỉ có tiêu đề "Kiểm tra phương thức thanh toán". Tooltip luôn nằm dưới vùng sáng, không che danh sách.
+  - Tooltip luôn nằm dưới vùng sáng, không che danh sách.
+- Phương thức thanh toán mặc định: thẻ OneLife nếu còn số dư (`user.olCardBalance` > 0), không thì Tiền mặt.
   - Text bước 1 đổi theo chế độ: "Đơn này nhận tại siêu thị …" hoặc "Đơn này giao đến …", kèm khung giờ đang chọn.
 
 ### 6. Ưu đãi của bạn — `#/vouchers`
@@ -103,7 +108,8 @@ Toàn bộ text, giá, sản phẩm, siêu thị, địa chỉ giao, khung giờ
 
 | Key | Dùng cho |
 |---|---|
-| `user` | Tên, điểm, `segment` (new / churned / active) |
+| `user` | Tên, điểm, số dư thẻ OneLife, `segment` (new / churned / active) |
+| `copy` | **Text onboarding** (configuration): Welcome, tooltip, coachmark Home và Checkout. `{store}`, `{address}`, `{slot}` tự thay theo lựa chọn hiện tại |
 | `replayMinutes` | Thời gian hiện nút "Xem lại hướng dẫn" |
 | `stores` | Danh sách siêu thị (cái đầu tiên là mặc định) |
 | `delivery` | Người nhận, địa chỉ, ngày/khung giờ giao, phí giao |
