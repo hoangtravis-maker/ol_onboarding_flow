@@ -35,7 +35,7 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 "Bạn đã tích điểm thành công" + 4 Deal online.
 - Nút **Mua** của deal đầu tiên có motion theo design (Figma `anim.btn.buy.type=pDeal`): 2 vòng sáng lan ra, dấu "+" trên icon giỏ nảy lên và xoay. Tất cả nút Mua dùng icon giỏ có dấu "+".
 - Bấm **Mua**: nút đổi thành stepper. Footer hiện "Đặt deal online, nhận ngay tại siêu thị…" và nút **Tiếp tục đặt hàng · N món** (sang Giỏ hàng, motion `anim.btn.cart` + nút nhún nhẹ). Thanh này trượt từ dưới lên khi khách thêm món đầu tiên; màn hình không bị làm tối.
-- **Xem tất cả deal** (dưới 4 deal): đóng màn này, sang Home và tự cuộn tới khu deal.
+- **Xem tất cả deal** (dưới 4 deal): đóng màn này, sang Home và tự cuộn tới khu deal. Đi đường này thì không hiện coachmark "Deal của bạn ở đây".
 - Nút Mua có viền trắng + bóng để nổi hẳn lên khỏi ảnh sản phẩm.
 - Bấm ảnh / tên sản phẩm: sang Chi tiết sản phẩm. Nút ✕: sang Home.
 

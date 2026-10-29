@@ -658,7 +658,7 @@
       dealsJump = false;
       const tabs = el.querySelector('#deal-tabs');
       const top = body.scrollTop + tabs.getBoundingClientRect().top - body.getBoundingClientRect().top - 8;
-      if (S.homeTipSeen) body.scrollTo({ top, behavior: 'smooth' }); else body.scrollTop = top;
+      body.scrollTo({ top, behavior: 'smooth' });
     }
     if (name === 'home' && !S.homeTipSeen) showHomeTip(el);
     if (name === 'home') initReplay(el);
@@ -696,7 +696,8 @@
     points: () => { S.usePoints = !S.usePoints; save(); render(true); },
     'home-tip-dismiss': () => { S.homeTipSeen = true; save(); render(true); },
     'coach-next': () => { coachStep += 1; render(true); },
-    'all-deals': () => { dealsJump = true; location.hash = '#/home'; },
+    // khách đã tự chọn xem deal → không cần coachmark "Deal của bạn ở đây" nữa
+    'all-deals': () => { dealsJump = true; S.homeTipSeen = true; save(); location.hash = '#/home'; },
     // xem lại onboarding từ đầu, giữ nguyên giỏ hàng
     replay: () => { S.homeTipSeen = false; S.coachDone = false; coachStep = 0; save(); location.hash = '#/welcome'; },
     voucher: (d) => { S.voucher = S.voucher === d.id ? null : d.id; save(); render(true); },
