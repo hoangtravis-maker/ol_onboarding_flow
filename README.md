@@ -42,7 +42,10 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
 ### 2. Home — `#/home`
 - Lần đầu vào: overlay + tooltip **"Deal của bạn ở đây"**, chỉ khoanh chip "Deals cho {tên}". Bấm **Đã hiểu** hoặc chạm bất kỳ đâu để tắt.
 - Nút **Mua** của deal đầu tiên có motion giống Welcome.
-- Bấm **Mua** (Home, Search, chi tiết sản phẩm): tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào giỏ hàng. Icon giỏ (tab bar / header) nảy lên kèm vòng sáng. Tooltip và hiệu ứng không tự tắt, chỉ mất khi khách vào giỏ hoặc giỏ rỗng. Bấm vào tooltip = sang giỏ hàng.
+- **Ảnh bay vào giỏ** (giống app OneLife hiện tại): bấm **Mua** thì ảnh tròn của sản phẩm bay theo đường cong từ nút Mua vào icon giỏ (~0,8s). Ảnh rơi vào thì icon giỏ và số trên giỏ bật lên; số trên giỏ chỉ tăng lúc này.
+  - Home: chỉ lần bấm Mua đầu tiên ở Home, bay xuống icon Giỏ hàng ở tab bar.
+  - Chi tiết sản phẩm: mỗi lần bấm Mua, bay lên icon giỏ trên header.
+- Lần **đầu tiên** thêm vào giỏ (Home, Search, chi tiết sản phẩm): tooltip **"Đã thêm, bấm giỏ hàng để đặt"** trỏ vào giỏ hàng, icon giỏ nảy lên kèm vòng sáng (bắt đầu sau khi ảnh rơi vào giỏ). Tooltip và hiệu ứng không tự tắt, chỉ mất khi khách vào giỏ hoặc giỏ rỗng; các lần thêm sau không hiện lại. Bấm vào tooltip = sang giỏ hàng.
 - Thanh **tìm kiếm**: sang Search.
 - Thanh **"tại <siêu thị>"**: sang Đổi siêu thị.
 - Tab **Giỏ hàng**: sang Giỏ hàng.
@@ -51,7 +54,7 @@ Reset xóa giỏ hàng, voucher, siêu thị đã chọn và cho mọi tooltip/c
   - Bấm vào thì chạy lại onboarding từ màn Welcome, giữ nguyên giỏ hàng.
 
 ### 3. Chi tiết sản phẩm — `#/pdp/<id>`
-- Bấm **Mua**: nút đổi thành stepper, tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ ở header (cùng hành vi với Home).
+- Bấm **Mua**: nút đổi thành stepper, ảnh sản phẩm bay vào icon giỏ ở header (mỗi lần bấm). Lần thêm đầu tiên có thêm tooltip **"Đã thêm, bấm giỏ hàng để đặt"** dưới icon giỏ (cùng hành vi với Home).
 
 ### 4. Giỏ hàng — `#/cart`
 - Không có tooltip (bỏ theo review 28/10 vì khách bấm nhầm vào tooltip và tooltip che "Dùng Voucher").
