@@ -643,6 +643,46 @@
     tt.style.top = `${r.top - 11 - tt.offsetHeight}px`;
   }
 
+  // ảnh sản phẩm bay theo đường cong từ nút Mua vào icon giỏ (giống app OneLife hiện tại);
+  // số trên giỏ giữ số cũ tới khi ảnh rơi vào, rồi giỏ + số cùng bật lên
+  function flyToCart(src, from, prev) {
+    const target = app.querySelector('.tab-cart, .pdp-cart');
+    if (!target || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const badge = target.querySelector('.badge');
+    const now = badge && badge.textContent;
+    if (badge) { if (prev) badge.textContent = prev; else badge.style.visibility = 'hidden'; }
+    // tooltip "Đã thêm…" và giỏ nảy chỉ bắt đầu khi ảnh đã rơi vào giỏ
+    const tip = app.querySelector('.tt-home-cart, .tt-pdp-cart');
+    const hint = target.classList.contains('cart-hint');
+    if (tip) tip.style.visibility = 'hidden';
+    target.classList.remove('cart-hint');
+    const base = app.getBoundingClientRect(), to = target.getBoundingClientRect();
+    const x0 = from.left + from.width / 2 - base.left, y0 = from.top + from.height / 2 - base.top;
+    const x1 = to.left + to.width / 2 - base.left, y1 = to.top + to.height / 2 - base.top;
+    // điểm uốn: giỏ ở trên (PDP) thì bay thẳng lên rồi lượn sang; giỏ ở dưới (Home) thì vồng lên rồi rơi xuống
+    const [cx, cy] = y1 < y0 ? [x0, y1 + (y0 - y1) * 0.3] : [(x0 + x1) / 2, Math.max(Math.min(y0, y1) - 100, 60)];
+    const SIZE = 48;
+    const ball = document.createElement('img');
+    ball.className = 'fly-ball';
+    ball.src = src;
+    app.appendChild(ball);
+    const frames = Array.from({ length: 25 }, (_, i) => {
+      const t = i / 24, u = 1 - t;
+      const x = u * u * x0 + 2 * u * t * cx + t * t * x1, y = u * u * y0 + 2 * u * t * cy + t * t * y1;
+      return { transform: `translate(${x - SIZE / 2}px, ${y - SIZE / 2}px) scale(${1 - 0.6 * t})` };
+    });
+    ball.animate(frames, { duration: 800, easing: 'cubic-bezier(.45, 0, .55, 1)' }).onfinish = () => {
+      ball.remove();
+      if (badge) { badge.textContent = now; badge.style.visibility = ''; }
+      target.classList.add('cart-pop');
+      setTimeout(() => {
+        target.classList.remove('cart-pop');
+        if (hint) target.classList.add('cart-hint');
+        if (tip) tip.style.visibility = '';
+      }, 450);
+    };
+  }
+
   // nút "Xem lại hướng dẫn": thu nhỏ khi đang cuộn, nở lại khi dừng; tự ẩn khi hết thời gian
   let replayTimer = null;
   function initReplay(scr) {
@@ -710,7 +750,19 @@
     back: () => { if (history.length > 1) history.back(); else location.hash = '#/home'; },
     pdp: (d) => { location.hash = `#/pdp/${d.id}`; },
     noop: () => {},
-    add: (d) => { S.cart[d.id] = 1; if (['home', 'pdp', 'search'].includes(route().name)) S.cartTip = true; save(); render(true); },
+    add: (d, el) => {
+      const r = route().name;
+      const from = el.getBoundingClientRect();
+      const prev = cartCount();
+      // ảnh bay vào giỏ: PDP mỗi lần bấm Mua, Home chỉ lần đầu
+      const fly = r === 'pdp' || (r === 'home' && !S.homeFlyDone);
+      if (r === 'home') S.homeFlyDone = true;
+      S.cart[d.id] = 1;
+      // tooltip "Đã thêm…" + giỏ nảy: chỉ lần thêm đầu tiên, tắt khi vào giỏ
+      if (['home', 'pdp', 'search'].includes(r) && !S.cartTipSeen) { S.cartTip = true; S.cartTipSeen = true; }
+      save(); render(true);
+      if (fly) flyToCart(byId[d.id].img, from, prev);
+    },
     inc: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) + 1; save(); render(true); },
     dec: (d) => { S.cart[d.id] = (S.cart[d.id] || 0) - 1; if (S.cart[d.id] <= 0) delete S.cart[d.id]; save(); render(true); },
     del: (d) => { delete S.cart[d.id]; save(); render(true); },
@@ -757,7 +809,7 @@
     // nút bên trong thẻ sản phẩm không mở PDP
     e.stopPropagation();
     const fn = actions[el.dataset.action];
-    if (fn) fn(el.dataset);
+    if (fn) fn(el.dataset, el);
   });
 
   // Reset cho khách mới: ấn giữ 3s vào nút menu (góc trái header Home) hoặc avatar ở tab bar
